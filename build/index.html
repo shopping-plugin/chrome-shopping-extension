@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Document</title>
+    <link rel="stylesheet" href="./index.css">
+    <link rel="stylesheet" href="../build/main/bundle.css">
+    <script src="./jquery-3.1.1.min.js" charset="utf-8"></script>
+    <script src="../build/vendor.js" charset="utf-8"></script>
+    <script src="../build/main/bundle.js" charset="utf-8"></script>
+</head>
+<body>
+    <div class="normal-web">
+    </div>
+    <script type="text/javascript">
+    $(window).ready(() => {
+        let count = 10;
+        while( count > 0 )
+        {
+            const $item = $(`<div class="item-view">
+            <div class="name">小米手机</div>
+            <div class="note">最近有降价VVV</div>
+            <div class="price"><label>价格</label><label id="price-area"></label>
+            </div>
+            <div class="color">
+            <label>颜色</label>
+            <label id="color-area">银白色</label>
+            </div>
+            <div class="type">
+            <label>类型</label>
+            <label id="type-area">联通合约机</label>
+            </div>
+            <div class="count">
+            <label>数量</label>
+            <label id="count-area">500</label>
+            </div>
+            </div>`);
+            $(".normal-web").append($item);
+            count--;
+        }
+    });
+    </script>
+</body>
+</html>

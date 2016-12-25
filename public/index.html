@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Document</title>
+    <script src="./alloyimage.js" charset="utf-8"></script>
+    <!-- <script src="https://www.google-analytics.com/analytics.js" charset="utf-8"></script>
+    <script src='https://cdn.rawgit.com/naptha/tesseract.js/a01d2a2/dist/tesseract.js'></script> -->
+</head>
+<body>
+    <div class="normal-web">
+        <img src="./test.png" id="myImg" alt="">
+    </div>
+    <script type="text/javascript">
+        setTimeout(() => {
+            var img = document.getElementById("myImg");
+            var _this = {};
+            var pic = AlloyImage(img);
+            img.onload = function() {
+                pic = AlloyImage(this);
+            };
+            var height = img.height;
+            var width = img.width;
+            const ap = pic.clone();
+            console.log(AlloyImage(img));
+            console.log(psLib(img));
+            ap.ps("粗糙").replace(img);
+            const png = AlloyImage(img).clip(0, 0, height/2, width/2).save("./result.png", 0.8);
+            console.log("png", png);
+        }, 500);
+    </script>
+</body>
+</html>

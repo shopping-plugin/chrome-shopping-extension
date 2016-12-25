@@ -1,0 +1,50 @@
+{
+    "manifest_version": 2,
+    "name": "web-recognize-demo",
+    "description": "A Chrome extension demo for web recognize.",
+    "version": "1.0",
+
+    "icons": {
+        "128": "build/icons/128.png",
+        "64": "build/icons/64.png",
+        "32": "build/icons/32.png",
+        "16": "build/icons/16.png"
+    },
+
+    "content_scripts": [
+        {
+          "matches": ["https://s.taobao.com/search?*", "https://item.taobao.com/item.htm*"],
+          "js": [
+              "build/alloyimage.js",
+              "build/vendor.js",
+              "build/main/bundle.js"
+          ],
+          "css": ["build/main/bundle.css"],
+          "run_at": "document_end"
+        }
+    ],
+
+    "page_action": {
+        "default_icon": "resources/taobao.png",
+        "default_popup": "popup/popup.html",
+        "default_title": "Shopping Guide"
+    },
+
+    "background": {
+        "scripts": [
+            "background/background.js",
+            "background/APICall.js",
+            "lib/jquery-2.1.4.min.js",
+            "lib/crypto-js/crypto-js.js"
+        ],
+        "persistent": false
+    },
+
+    "permissions": [
+        "tabs",
+        "contextMenus",
+        "http://*/",
+        "https://*/",
+        "tts"
+    ]
+}

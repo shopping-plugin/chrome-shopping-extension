@@ -1,0 +1,46 @@
+{
+  "name": "web-recognize-capture",
+  "version": "1.0.0",
+  "description": "-",
+  "main": "index.js",
+  "scripts": {
+    "start": "node ./server.js",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/lilongllong/web-recognize-capture.git"
+  },
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/lilongllong/web-recognize-capture/issues"
+  },
+  "homepage": "https://github.com/lilongllong/web-recognize-capture#readme",
+  "devDependencies": {
+    "babel-core": "^6.18.2",
+    "babel-loader": "^6.2.8",
+    "babel-plugin-transform-runtime": "^6.15.0",
+    "babel-preset-es2015": "^6.18.0",
+    "babel-preset-stage-0": "^6.16.0",
+    "babel-runtime": "^6.20.0",
+    "css-loader": "^0.26.0",
+    "dom-to-image": "^2.5.2",
+    "express": "^4.14.0",
+    "extract-text-webpack-plugin": "^1.0.1",
+    "file-loader": "^0.9.0",
+    "file-saver": "^1.3.3",
+    "glob": "^7.1.1",
+    "jquery": "^3.1.1",
+    "json-loader": "^0.5.4",
+    "less": "^2.7.1",
+    "less-loader": "^2.2.3",
+    "regenerator": "^0.9.5",
+    "style-loader": "^0.13.1",
+    "tesseract.js": "^1.0.10",
+    "url-loader": "^0.5.7",
+    "webpack": "^1.13.3",
+    "webpack-dev-server": "^1.16.2",
+    "ws": "^1.1.1"
+  }
+}
