@@ -4493,6 +4493,11 @@ webpackJsonp([0],[
 	    this.PAGE_NO = 1;
 	    this.product_list = "";
 
+	    this.next_page_dom_list = "";
+	    this.item_index = 0;
+	    this.page_size = 44;
+	    this.getNextPage();
+
 	    // 存储过往操作的黑白名单，在填补空白时对product_list中的商品进行过滤
 	    this.WHITE_LIST = [];
 	    this.BLACK_LIST = [];
@@ -4519,6 +4524,8 @@ webpackJsonp([0],[
 	  (0, _createClass3.default)(DomOperation, [{
 	    key: "getNextPage",
 	    value: function getNextPage() {
+	      var _this2 = this;
+
 	      // 获取下一页链接
 	      var next_page = $('ul.items li.item.active').next();
 	      var a = next_page.children();
@@ -4532,7 +4539,7 @@ webpackJsonp([0],[
 	      } else {
 	        next_url = cur_url.replace(/s=([^& ]*)/, "s=" + s_value);
 	      }
-	      console.debug(next_url);
+	      console.debug("next_url", next_url);
 
 	      var iframe = document.createElement('iframe');
 	      iframe.id = "next_page_iframe";
@@ -4543,35 +4550,47 @@ webpackJsonp([0],[
 	      document.body.appendChild(iframe);
 
 	      setTimeout(function () {
-	        var item_list = $(window.frames["next_page_iframe"].document).find(".grid.g-clearfix").children().eq(0);
-	        console.debug("item_list", item_list);
+	        var item_list = void 0;
+	        if (_this2.getPageStyle() == _this2.GRID_STYLE) {
+	          item_list = $(window.frames["next_page_iframe"].document).find("div.grid.g-clearfix").children().eq(0);
+	        } else {
+	          item_list = $(window.frames["next_page_iframe"].document).find("div.items.g-clearfix");
+	        }
+
+	        _this2.next_page_dom_list = item_list.children();
+	        _this2.item_index = 0;
+	        console.debug("item_list", _this2.next_page_dom_list);
 	      }, 2000);
 	    }
+
+	    /*
+	     * 供笔记识别部分调用的接口
+	     */
+
 	  }, {
 	    key: "filter",
 	    value: function filter(containerDivList, imgDivList, typeList) {
-	      var _this2 = this;
+	      this.filterDom(containerDivList, imgDivList, typeList);
 
-	      this.getNextPage();
-
-	      if (this.product_list == "") {
-	        console.debug("calling API to get product list ...");
-
-	        // 获得当前页面商品排序方式
-	        //let sorts = $('li.sort');
-
-	        this.requestForProductList();
-
-	        // 等待异步API调用的返回结果
-	        setTimeout(function () {
-	          console.debug(_this2.product_list);
-
-	          _this2.filterDom(containerDivList, imgDivList, typeList);
-	        }, 1000);
-	      } else {
-	        // 已获取商品列表，直接过滤
-	        this.filterDom(containerDivList, imgDivList, typeList);
-	      }
+	      // if (this.product_list == "") {
+	      // 	console.debug("calling API to get product list ...");
+	      //
+	      // 	// 获得当前页面商品排序方式
+	      // 	//let sorts = $('li.sort');
+	      //
+	      // 	this.requestForProductList();
+	      //
+	      // 	// 等待异步API调用的返回结果
+	      // 	setTimeout(() => {
+	      // 		console.debug(this.product_list);
+	      //
+	      // 		//this.filterDom(containerDivList, imgDivList, typeList);
+	      // 	}, 1000);
+	      // }
+	      // else {
+	      // 	// 已获取商品列表，直接过滤
+	      // 	//this.filterDom(containerDivList, imgDivList, typeList);
+	      // }
 	    }
 
 	    /*
@@ -4583,7 +4602,6 @@ webpackJsonp([0],[
 	  }, {
 	    key: "filterDom",
 	    value: function filterDom(containerDivList, imgDivList, typeList) {
-	      console.log("param", containerDivList, imgDivList, typeList);
 	      var page_style = this.getPageStyle();
 
 	      for (var i = 0; i < containerDivList.length; i++) {
@@ -4592,7 +4610,6 @@ webpackJsonp([0],[
 	        var cur_type = typeList[i];
 
 	        var cur_id = this.getProductIdFromImg(cur_img);
-	        console.log("cur_id", cur_id);
 	        if (cur_id == "") continue;
 
 	        // 大叉，黑名单，直接删除商品，并填补造成的页面空缺
@@ -4623,6 +4640,7 @@ webpackJsonp([0],[
 	          }
 	      }
 	    }
+
 	    /*
 	     * 根据图片dom元素获取商品id
 	     */
@@ -4638,7 +4656,6 @@ webpackJsonp([0],[
 	      if (id == null) {
 	        return "";
 	      }
-	      console.log("id", id);
 
 	      return id[1];
 	    }
@@ -4656,7 +4673,7 @@ webpackJsonp([0],[
 	    }
 
 	    /*
-	     * 填补页面空缺
+	     * 利用淘宝URL填补页面空缺
 	     */
 
 	  }, {
@@ -4664,9 +4681,64 @@ webpackJsonp([0],[
 	    value: function fillInBlank(page_style) {
 	      // 当前商品列表最后一个元素，将新商品添加在其后即可
 	      var lastProduct = this.getLastProduct(page_style);
-	      console.debug(lastProduct);
-
 	      var newProduct = this.getNewProduct();
+
+	      lastProduct.after(newProduct);
+	    }
+
+	    /*
+	     * 从淘宝URL获得的商品列表中获取填充的下一个商品
+	     */
+
+	  }, {
+	    key: "getNewProduct",
+	    value: function getNewProduct() {
+	      while (true) {
+	        // 现有填充商品用完，继续获取下一页商品
+	        if (this.item_index == this.page_size) {}
+
+	        console.debug("item index: " + this.item_index);
+	        var product = this.next_page_dom_list.eq(this.item_index);
+	        this.item_index++;
+	        console.debug("product", product);
+
+	        var p_id = this.getProductIdFromDom(product);
+	        if (this.checkProduct(p_id)) {
+	          return product;
+	        }
+	      }
+	    }
+
+	    /*
+	     * 从商品dom中获取商品id
+	     */
+
+	  }, {
+	    key: "getProductIdFromDom",
+	    value: function getProductIdFromDom(product_dom) {
+	      var p_id = void 0;
+	      if (this.getPageStyle() == this.GRID_STYLE) {
+	        var a_id = product_dom[0].childNodes[1].childNodes[1].childNodes[1].childNodes[1].id;
+	        var a_id_array = a_id.split("_");
+	        p_id = a_id_array[a_id_array.length - 1];
+	      } else {
+	        p_id = product_dom[0].childNodes[1].childNodes[1].childNodes[1].childNodes[1].childNodes[1].dataset["nid"];
+	      }
+
+	      return p_id;
+	    }
+
+	    /*
+	     * 利用API结果填补页面空缺
+	     */
+
+	  }, {
+	    key: "fillInBlankByAPI",
+	    value: function fillInBlankByAPI(page_style) {
+	      // 当前商品列表最后一个元素，将新商品添加在其后即可
+	      var lastProduct = this.getLastProduct(page_style);
+
+	      var newProduct = this.getNewProductByAPI();
 
 	      // 替换商品信息
 	      var item = lastProduct.clone();
@@ -4791,18 +4863,17 @@ webpackJsonp([0],[
 	    }
 
 	    /*
-	     * 从商品列表中获取填充的下一个商品
+	     * 从API获得的商品列表中获取填充的下一个商品
 	     */
 
 	  }, {
-	    key: "getNewProduct",
-	    value: function getNewProduct() {
+	    key: "getNewProductByAPI",
+	    value: function getNewProductByAPI() {
 	      var _this3 = this;
 
 	      var _loop = function _loop() {
 	        var product = _this3.product_list.shift();
-	        console.debug(product);
-	        var test = false;
+	        console.debug("product", product);
 
 	        // 商品列表为空，调用API取下一页商品
 	        if (product == undefined) {
@@ -4811,15 +4882,15 @@ webpackJsonp([0],[
 
 	          // 等待异步API调用的返回结果
 	          setTimeout(function () {
-	            console.debug(_this3.product_list);
+	            //console.debug(this.product_list);
 	            product = _this3.product_list.shift();
 
-	            if (_this3.checkProduct(product)) {
+	            if (_this3.checkProduct(product.num_iid)) {
 	              return product;
 	            }
 	          }, 1000);
 	        } else {
-	          if (_this3.checkProduct(product)) {
+	          if (_this3.checkProduct(product.num_iid)) {
 	            return {
 	              v: product
 	            };
@@ -4840,8 +4911,7 @@ webpackJsonp([0],[
 
 	  }, {
 	    key: "checkProduct",
-	    value: function checkProduct(product) {
-	      var numiid = product.num_iid;
+	    value: function checkProduct(numiid) {
 
 	      // 是否是黑白名单商品
 	      if ($.inArray(numiid, this.WHITE_LIST) != -1 || $.inArray(numiid, this.BLACK_LIST) != -1) {
@@ -4881,7 +4951,6 @@ webpackJsonp([0],[
 	        cur_style = this.LIST_STYLE;
 	      }
 
-	      console.debug("current page style: " + cur_style);
 	      return cur_style;
 	    }
 
@@ -4917,13 +4986,12 @@ webpackJsonp([0],[
 	    }
 
 	    /*
-	     * 与popup页面通信，以实现新开标签页
+	     * 与background页面通信，以实现新开标签页
 	     */
 
 	  }, {
 	    key: "createTab",
 	    value: function createTab(url) {
-	      console.log("createing tab: " + url);
 	      chrome.runtime.sendMessage({ command: "createTab", target: url }, function (response) {
 	        console.log(response.result);
 	      });
@@ -4938,7 +5006,7 @@ webpackJsonp([0],[
 	    value: function requestForProductList() {
 	      // 获得当前页面URL
 	      var page_url = $(document)[0].URL;
-	      console.debug(page_url);
+	      console.debug("page_url", page_url);
 
 	      chrome.runtime.sendMessage({ command: "getProductList", url: page_url, page_no: this.PAGE_NO }, function (response) {});
 	    }
@@ -5225,7 +5293,7 @@ webpackJsonp([0],[
 					"spec": ">=1.0.10 <2.0.0",
 					"type": "range"
 				},
-				"/Users/yef/codes/chrome-plugin/web-recognize-capture"
+				"/Users/yef/codes/chrome-plugin/chrome-shopping-extension"
 			]
 		],
 		"_from": "tesseract.js@>=1.0.10 <2.0.0",
@@ -5259,7 +5327,7 @@ webpackJsonp([0],[
 		"_shasum": "e11a96ae76147939d9218f88e287fb69414b1e5d",
 		"_shrinkwrap": null,
 		"_spec": "tesseract.js@^1.0.10",
-		"_where": "/Users/yef/codes/chrome-plugin/web-recognize-capture",
+		"_where": "/Users/yef/codes/chrome-plugin/chrome-shopping-extension",
 		"author": "",
 		"browser": {
 			"./src/node/index.js": "./src/browser/index.js"

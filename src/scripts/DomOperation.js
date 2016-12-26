@@ -6,6 +6,11 @@ export default class DomOperation {
         this.PAGE_NO = 1;
         this.product_list = "";
 
+        this.next_page_dom_list = "";
+        this.item_index = 0;
+        this.page_size = 44;
+        this.getNextPage();
+
         // 存储过往操作的黑白名单，在填补空白时对product_list中的商品进行过滤
         this.WHITE_LIST = [];
         this.BLACK_LIST = [];
@@ -44,7 +49,7 @@ export default class DomOperation {
       else {
         next_url = cur_url.replace(/s=([^& ]*)/, "s=" + s_value);
       }
-      console.debug(next_url);
+      console.debug("next_url", next_url);
 
       let iframe = document.createElement('iframe');
       iframe.id = "next_page_iframe";
@@ -55,33 +60,45 @@ export default class DomOperation {
       document.body.appendChild(iframe);
 
       setTimeout(() => {
-        let item_list = $(window.frames["next_page_iframe"].document).find(".grid.g-clearfix").children().eq(0);
-        console.debug("item_list", item_list);
+        let item_list;
+        if (this.getPageStyle() == this.GRID_STYLE) {
+          item_list = $(window.frames["next_page_iframe"].document).find("div.grid.g-clearfix").children().eq(0);
+        }
+        else {
+          item_list = $(window.frames["next_page_iframe"].document).find("div.items.g-clearfix");
+        }
+
+        this.next_page_dom_list = item_list.children();
+        this.item_index = 0;
+        console.debug("item_list", this.next_page_dom_list);
       }, 2000);
     }
 
+    /*
+     * 供笔记识别部分调用的接口
+     */
     filter(containerDivList, imgDivList, typeList) {
-      this.getNextPage();
+      this.filterDom(containerDivList, imgDivList, typeList);
 
-    	if (this.product_list == "") {
-    		console.debug("calling API to get product list ...");
-
-    		// 获得当前页面商品排序方式
-    		//let sorts = $('li.sort');
-
-    		this.requestForProductList();
-
-    		// 等待异步API调用的返回结果
-    		setTimeout(() => {
-    			console.debug(this.product_list);
-
-    			this.filterDom(containerDivList, imgDivList, typeList);
-    		}, 1000);
-    	}
-    	else {
-    		// 已获取商品列表，直接过滤
-    		this.filterDom(containerDivList, imgDivList, typeList);
-    	}
+    	// if (this.product_list == "") {
+    	// 	console.debug("calling API to get product list ...");
+      //
+    	// 	// 获得当前页面商品排序方式
+    	// 	//let sorts = $('li.sort');
+      //
+    	// 	this.requestForProductList();
+      //
+    	// 	// 等待异步API调用的返回结果
+    	// 	setTimeout(() => {
+    	// 		console.debug(this.product_list);
+      //
+    	// 		//this.filterDom(containerDivList, imgDivList, typeList);
+    	// 	}, 1000);
+    	// }
+    	// else {
+    	// 	// 已获取商品列表，直接过滤
+    	// 	//this.filterDom(containerDivList, imgDivList, typeList);
+    	// }
     }
 
     /*
@@ -89,9 +106,7 @@ export default class DomOperation {
      * 根据识别出的大圈大叉的dom元素对页面进行过滤
      * 若无用于填补空白的商品列表，则调用API获取
      */
-
     filterDom(containerDivList, imgDivList, typeList) {
-        console.log("param", containerDivList, imgDivList, typeList);
     	let page_style = this.getPageStyle();
 
     	for (let i = 0; i < containerDivList.length; i++) {
@@ -100,7 +115,6 @@ export default class DomOperation {
     		let cur_type = typeList[i];
 
     		let cur_id = this.getProductIdFromImg(cur_img);
-            console.log("cur_id", cur_id);
     		if (cur_id == "")
     			continue;
 
@@ -132,6 +146,7 @@ export default class DomOperation {
     		}
     	}
     }
+
     /*
      * 根据图片dom元素获取商品id
      */
@@ -144,7 +159,6 @@ export default class DomOperation {
     	if (id == null) {
     		return "";
     	}
-        console.log("id", id);
 
     	return id[1];
     }
@@ -159,14 +173,63 @@ export default class DomOperation {
     }
 
     /*
-     * 填补页面空缺
+     * 利用淘宝URL填补页面空缺
      */
     fillInBlank(page_style) {
+      // 当前商品列表最后一个元素，将新商品添加在其后即可
+    	let lastProduct = this.getLastProduct(page_style);
+      let newProduct = this.getNewProduct();
+
+      lastProduct.after(newProduct);
+    }
+
+    /*
+     * 从淘宝URL获得的商品列表中获取填充的下一个商品
+     */
+    getNewProduct() {
+      while (true) {
+        // 现有填充商品用完，继续获取下一页商品
+        if (this.item_index == this.page_size) {
+
+        }
+
+        console.debug("item index: " + this.item_index);
+        let product = this.next_page_dom_list.eq(this.item_index);
+        this.item_index++;
+    		console.debug("product", product);
+
+        let p_id = this.getProductIdFromDom(product);
+        if (this.checkProduct(p_id)) {
+          return product;
+        }
+      }
+    }
+
+    /*
+     * 从商品dom中获取商品id
+     */
+    getProductIdFromDom(product_dom) {
+      let p_id;
+      if (this.getPageStyle() == this.GRID_STYLE) {
+        let a_id = product_dom[0].childNodes[1].childNodes[1].childNodes[1].childNodes[1].id;
+        let a_id_array = a_id.split("_");
+        p_id = a_id_array[a_id_array.length - 1];
+      }
+      else {
+        p_id = product_dom[0].childNodes[1].childNodes[1].childNodes[1].childNodes[1].childNodes[1].dataset["nid"];
+      }
+
+      return p_id;
+    }
+
+    /*
+     * 利用API结果填补页面空缺
+     */
+    fillInBlankByAPI(page_style) {
     	// 当前商品列表最后一个元素，将新商品添加在其后即可
     	let lastProduct = this.getLastProduct(page_style);
-    	console.debug(lastProduct);
 
-    	let newProduct = this.getNewProduct();
+    	let newProduct = this.getNewProductByAPI();
 
     	// 替换商品信息
     	let item = lastProduct.clone();
@@ -292,13 +355,12 @@ export default class DomOperation {
     }
 
     /*
-     * 从商品列表中获取填充的下一个商品
+     * 从API获得的商品列表中获取填充的下一个商品
      */
-    getNewProduct() {
+    getNewProductByAPI() {
     	while (true) {
     		let product = this.product_list.shift();
-    		console.debug(product);
-    		let test = false;
+    		console.debug("product", product);
 
     		// 商品列表为空，调用API取下一页商品
     		if (product == undefined) {
@@ -307,16 +369,16 @@ export default class DomOperation {
 
     			// 等待异步API调用的返回结果
     			setTimeout(() => {
-    				console.debug(this.product_list);
+    				//console.debug(this.product_list);
     				product = this.product_list.shift();
 
-    				if (this.checkProduct(product)) {
+    				if (this.checkProduct(product.num_iid)) {
     					return product;
     				}
     			}, 1000);
     		}
     		else {
-    			if (this.checkProduct(product)) {
+    			if (this.checkProduct(product.num_iid)) {
     				return product;
     			}
     		}
@@ -326,8 +388,7 @@ export default class DomOperation {
     /*
      * 检测商品是否可填充：不与页面已有商品重复；不是黑白名单商品
      */
-    checkProduct(product) {
-    	let numiid = product.num_iid;
+    checkProduct(numiid) {
 
     	// 是否是黑白名单商品
     	if ($.inArray(numiid, this.WHITE_LIST) != -1 || $.inArray(numiid, this.BLACK_LIST) != -1) {
@@ -366,7 +427,6 @@ export default class DomOperation {
     		cur_style = this.LIST_STYLE;
     	}
 
-    	console.debug("current page style: " + cur_style);
     	return cur_style;
     }
 
@@ -398,7 +458,7 @@ export default class DomOperation {
     }
 
     /*
-     * 与popup页面通信，以实现新开标签页
+     * 与background页面通信，以实现新开标签页
      */
     createTab(url) {
     	chrome.runtime.sendMessage({command: "createTab", target: url}, (response) => {
@@ -412,7 +472,7 @@ export default class DomOperation {
     requestForProductList() {
     	// 获得当前页面URL
     	let page_url = $(document)[0].URL;
-    	console.debug(page_url);
+    	console.debug("page_url", page_url);
 
     	chrome.runtime.sendMessage({command: "getProductList", url: page_url, page_no: this.PAGE_NO}, (response) => {
 
