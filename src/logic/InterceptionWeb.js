@@ -13,11 +13,11 @@ export default class InterceptionWeb {
         const scale = 4;
         const cloneDom = this.scaleDom(dom, scale);
         // make sure all text is black
-        $(cloneDom).find(".H").css("color", "rgb(61, 61, 61) !important");
+        $(cloneDom).children().children(".H").removeClass("H");
         document.body.appendChild(cloneDom);
         return new Promise((resolve, reject) => {
             this.domToImage.toPng(cloneDom).then((dataUrl) => {
-                cloneDom.remove();
+                // cloneDom.remove();
                 let img = new Image();
                 img.src = dataUrl;
                 setTimeout(() => {

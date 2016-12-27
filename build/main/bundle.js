@@ -5731,14 +5731,13 @@ webpackJsonp([0],[
 	            var scale = 4;
 	            var cloneDom = this.scaleDom(dom, scale);
 	            // make sure all text is black
-	            $(cloneDom).find(".H").css("color", "rgb(61, 61, 61)");
+	            $(cloneDom).children().children(".H").removeClass("H");
 	            document.body.appendChild(cloneDom);
 	            return new Promise(function (resolve, reject) {
 	                _this.domToImage.toPng(cloneDom).then(function (dataUrl) {
-	                    //cloneDom.remove();
+	                    // cloneDom.remove();
 	                    var img = new Image();
 	                    img.src = dataUrl;
-
 	                    setTimeout(function () {
 	                        var result = _this.clip(img, {
 	                            "startX": range.startX * scale,
