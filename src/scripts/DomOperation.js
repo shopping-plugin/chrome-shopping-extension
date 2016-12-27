@@ -9,6 +9,9 @@ export default class DomOperation {
         this.next_page_dom_list = "";
         this.item_index = 0;
         this.page_size = 44;
+        this.next_page_count = 0;
+        this.next_page_url = "";
+        this.initNextPageData();
         this.getNextPage();
 
         // 存储过往操作的黑白名单，在填补空白时对product_list中的商品进行过滤
@@ -34,27 +37,43 @@ export default class DomOperation {
         });
     }
 
-    getNextPage() {
-      // 获取下一页链接
+    /*
+     * 根据当前页数初始化下一页数据
+     * 包括下一页的页数，下一页的URL，以及页大小
+     */
+    initNextPageData() {
       let next_page = $('ul.items li.item.active').next();
       let a = next_page.children();
-      let s_value = a.attr("data-value");
+      this.next_page_count = a[0].innerText;
+      this.next_page_url = this.getNextPageURL();
 
+      console.debug("next_page_count: " + this.next_page_count);
+      console.debug("page_size: " + this.page_size);
+      console.debug("next_url: ", this.next_page_url);
+    }
+
+    getNextPageURL() {
       let cur_url = $(document)[0].URL;
-      let s_para = cur_url.match(/s=([^& ]*)/);
-      let next_url;
+      let s_para = cur_url.match(/&s=([^& ]*)/);
+
+      let s_value = this.page_size * (this.next_page_count - 1);
       if (s_para == null) {
-        next_url = cur_url + "&s=" + s_value;
+        return cur_url + "&s=" + s_value;
       }
       else {
-        next_url = cur_url.replace(/s=([^& ]*)/, "s=" + s_value);
+        return cur_url.replace(/&s=([^& ]*)/, "&s=" + s_value);
       }
-      console.debug("next_url", next_url);
+    }
+
+    getNextPage() {
+      if ($('#next_page_iframe').length != 0) {
+        $('#next_page_iframe').remove();
+      }
 
       let iframe = document.createElement('iframe');
       iframe.id = "next_page_iframe";
       iframe.name = "next_page_iframe"
-      iframe.src = next_url;
+      iframe.src = this.next_page_url;
       iframe.width = "0";
       iframe.height = "0";
       document.body.appendChild(iframe);
@@ -70,8 +89,11 @@ export default class DomOperation {
 
         this.next_page_dom_list = item_list.children();
         this.item_index = 0;
+        this.next_page_count++;
+        this.next_page_url = this.getNextPageURL();
+
         console.debug("item_list", this.next_page_dom_list);
-      }, 2000);
+      }, 5000);
     }
 
     /*
@@ -178,7 +200,7 @@ export default class DomOperation {
     fillInBlank(page_style) {
       // 当前商品列表最后一个元素，将新商品添加在其后即可
     	let lastProduct = this.getLastProduct(page_style);
-      let newProduct = this.getNewProduct();
+      let newProduct = this.getNewProduct(page_style);
 
       lastProduct.after(newProduct);
     }
@@ -186,21 +208,35 @@ export default class DomOperation {
     /*
      * 从淘宝URL获得的商品列表中获取填充的下一个商品
      */
-    getNewProduct() {
+    getNewProduct(page_style) {
       while (true) {
-        // 现有填充商品用完，继续获取下一页商品
+        // 下一页商品用完，继续获取下下页商品
         if (this.item_index == this.page_size) {
+          this.getNextPage();
+          setTimeout(() => {
+            this.fillInBlank(page_style);
+          }, 5000);
 
+          break;
         }
+        else {
+          console.debug("item index: " + this.item_index);
+          let product = this.next_page_dom_list.eq(this.item_index);
+          this.item_index++;
+      		console.debug("product", product);
 
-        console.debug("item index: " + this.item_index);
-        let product = this.next_page_dom_list.eq(this.item_index);
-        this.item_index++;
-    		console.debug("product", product);
+          // 检测是否为商品
+          if (page_style == this.GRID_STYLE && !product.hasClass("item J_MouserOnverReq")) {
+            continue;
+          }
+          if (page_style == this.LIST_STYLE && !product.hasClass("item g-clearfix")) {
+            continue;
+          }
 
-        let p_id = this.getProductIdFromDom(product);
-        if (this.checkProduct(p_id)) {
-          return product;
+          let p_id = this.getProductIdFromDom(product);
+          if (this.checkProduct(p_id)) {
+            return product;
+          }
         }
       }
     }

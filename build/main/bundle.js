@@ -4496,6 +4496,9 @@ webpackJsonp([0],[
 	    this.next_page_dom_list = "";
 	    this.item_index = 0;
 	    this.page_size = 44;
+	    this.next_page_count = 0;
+	    this.next_page_url = "";
+	    this.initNextPageData();
 	    this.getNextPage();
 
 	    // 存储过往操作的黑白名单，在填补空白时对product_list中的商品进行过滤
@@ -4521,30 +4524,50 @@ webpackJsonp([0],[
 	    });
 	  }
 
+	  /*
+	   * 根据当前页数初始化下一页数据
+	   * 包括下一页的页数，下一页的URL，以及页大小
+	   */
+
+
 	  (0, _createClass3.default)(DomOperation, [{
+	    key: "initNextPageData",
+	    value: function initNextPageData() {
+	      var next_page = $('ul.items li.item.active').next();
+	      var a = next_page.children();
+	      this.next_page_count = a[0].innerText;
+	      this.next_page_url = this.getNextPageURL();
+
+	      console.debug("next_page_count: " + this.next_page_count);
+	      console.debug("page_size: " + this.page_size);
+	      console.debug("next_url: ", this.next_page_url);
+	    }
+	  }, {
+	    key: "getNextPageURL",
+	    value: function getNextPageURL() {
+	      var cur_url = $(document)[0].URL;
+	      var s_para = cur_url.match(/&s=([^& ]*)/);
+
+	      var s_value = this.page_size * (this.next_page_count - 1);
+	      if (s_para == null) {
+	        return cur_url + "&s=" + s_value;
+	      } else {
+	        return cur_url.replace(/&s=([^& ]*)/, "&s=" + s_value);
+	      }
+	    }
+	  }, {
 	    key: "getNextPage",
 	    value: function getNextPage() {
 	      var _this2 = this;
 
-	      // 获取下一页链接
-	      var next_page = $('ul.items li.item.active').next();
-	      var a = next_page.children();
-	      var s_value = a.attr("data-value");
-
-	      var cur_url = $(document)[0].URL;
-	      var s_para = cur_url.match(/s=([^& ]*)/);
-	      var next_url = void 0;
-	      if (s_para == null) {
-	        next_url = cur_url + "&s=" + s_value;
-	      } else {
-	        next_url = cur_url.replace(/s=([^& ]*)/, "s=" + s_value);
+	      if ($('#next_page_iframe').length != 0) {
+	        $('#next_page_iframe').remove();
 	      }
-	      console.debug("next_url", next_url);
 
 	      var iframe = document.createElement('iframe');
 	      iframe.id = "next_page_iframe";
 	      iframe.name = "next_page_iframe";
-	      iframe.src = next_url;
+	      iframe.src = this.next_page_url;
 	      iframe.width = "0";
 	      iframe.height = "0";
 	      document.body.appendChild(iframe);
@@ -4559,8 +4582,11 @@ webpackJsonp([0],[
 
 	        _this2.next_page_dom_list = item_list.children();
 	        _this2.item_index = 0;
+	        _this2.next_page_count++;
+	        _this2.next_page_url = _this2.getNextPageURL();
+
 	        console.debug("item_list", _this2.next_page_dom_list);
-	      }, 2000);
+	      }, 5000);
 	    }
 
 	    /*
@@ -4681,7 +4707,7 @@ webpackJsonp([0],[
 	    value: function fillInBlank(page_style) {
 	      // 当前商品列表最后一个元素，将新商品添加在其后即可
 	      var lastProduct = this.getLastProduct(page_style);
-	      var newProduct = this.getNewProduct();
+	      var newProduct = this.getNewProduct(page_style);
 
 	      lastProduct.after(newProduct);
 	    }
@@ -4692,19 +4718,36 @@ webpackJsonp([0],[
 
 	  }, {
 	    key: "getNewProduct",
-	    value: function getNewProduct() {
+	    value: function getNewProduct(page_style) {
+	      var _this3 = this;
+
 	      while (true) {
-	        // 现有填充商品用完，继续获取下一页商品
-	        if (this.item_index == this.page_size) {}
+	        // 下一页商品用完，继续获取下下页商品
+	        if (this.item_index == this.page_size) {
+	          this.getNextPage();
+	          setTimeout(function () {
+	            _this3.fillInBlank(page_style);
+	          }, 5000);
 
-	        console.debug("item index: " + this.item_index);
-	        var product = this.next_page_dom_list.eq(this.item_index);
-	        this.item_index++;
-	        console.debug("product", product);
+	          break;
+	        } else {
+	          console.debug("item index: " + this.item_index);
+	          var product = this.next_page_dom_list.eq(this.item_index);
+	          this.item_index++;
+	          console.debug("product", product);
 
-	        var p_id = this.getProductIdFromDom(product);
-	        if (this.checkProduct(p_id)) {
-	          return product;
+	          // 检测是否为商品
+	          if (page_style == this.GRID_STYLE && !product.hasClass("item J_MouserOnverReq")) {
+	            continue;
+	          }
+	          if (page_style == this.LIST_STYLE && !product.hasClass("item g-clearfix")) {
+	            continue;
+	          }
+
+	          var p_id = this.getProductIdFromDom(product);
+	          if (this.checkProduct(p_id)) {
+	            return product;
+	          }
 	        }
 	      }
 	    }
@@ -4869,28 +4912,28 @@ webpackJsonp([0],[
 	  }, {
 	    key: "getNewProductByAPI",
 	    value: function getNewProductByAPI() {
-	      var _this3 = this;
+	      var _this4 = this;
 
 	      var _loop = function _loop() {
-	        var product = _this3.product_list.shift();
+	        var product = _this4.product_list.shift();
 	        console.debug("product", product);
 
 	        // 商品列表为空，调用API取下一页商品
 	        if (product == undefined) {
-	          _this3.PAGE_NO++;
-	          _this3.requestForProductList();
+	          _this4.PAGE_NO++;
+	          _this4.requestForProductList();
 
 	          // 等待异步API调用的返回结果
 	          setTimeout(function () {
 	            //console.debug(this.product_list);
-	            product = _this3.product_list.shift();
+	            product = _this4.product_list.shift();
 
-	            if (_this3.checkProduct(product.num_iid)) {
+	            if (_this4.checkProduct(product.num_iid)) {
 	              return product;
 	            }
 	          }, 1000);
 	        } else {
-	          if (_this3.checkProduct(product.num_iid)) {
+	          if (_this4.checkProduct(product.num_iid)) {
 	            return {
 	              v: product
 	            };
