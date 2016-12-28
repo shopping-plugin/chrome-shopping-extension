@@ -35,16 +35,31 @@
             "background/background.js",
             "background/APICall.js",
             "lib/jquery-2.1.4.min.js",
-            "lib/crypto-js/crypto-js.js"
+            "lib/crypto-js/crypto-js.js",
+            "background/notecloud/file.js",
+            "background/notecloud/http.js",
+            "background/notecloud/gdapi.js",
+            "background/notecloud/cloud.js",
+            "background/notecloud.js"
         ],
         "persistent": false
     },
 
     "permissions": [
         "tabs",
+        "storage",
+        "identity",
+        "declarativeContent",
         "contextMenus",
         "http://*/",
         "https://*/",
         "tts"
-    ]
+    ],
+    "oauth2": {
+        "client_id": "617412293902-138v5kmi17m302tfslu8p2b9kdamthkb.apps.googleusercontent.com",
+        "scopes": [
+            "https://www.googleapis.com/auth/drive"
+        ]
+    },
+    "key":"MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAw5g4iJvuGV8pj3qLHuPNNlN4drB8QabxynkX93AW1u5w9Wpv/uEAEXmNYUlgb83N6hG1F8ZdYCkflXt9CxlCXwh7QNlHL3tYcF27HKbO36Lqbg68jpk9DQ/leZvzUzf+bwPmdIS7ahda1NhetN7iN/K7ag7fPeF/+hxyfuPt5UNZp1fW4ZtB/IsRTBCf6F80sH3ubyvVsB1sA1t9NTgDfKFfZ0lrZlrHOAuIwegBtN70fTDBdRPp9+So1zriQoWD1+XMkFu03Bi22cAKg0iYz5s323dDFxMJqyNhgfFf86a2t055ONbqLc/0TfxrF37+INSeyymX+W/npDNpy+3sYQIDAQAB"
 }
