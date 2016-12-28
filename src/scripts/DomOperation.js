@@ -130,6 +130,7 @@ export default class DomOperation {
      */
     filterDom(containerDivList, imgDivList, typeList) {
     	let page_style = this.getPageStyle();
+      console.debug(containerDivList, imgDivList, typeList);
 
     	for (let i = 0; i < containerDivList.length; i++) {
     		let cur_item = containerDivList[i];
@@ -137,6 +138,7 @@ export default class DomOperation {
     		let cur_type = typeList[i];
 
     		let cur_id = this.getProductIdFromImg(cur_img);
+        console.debug("cur_id: " + cur_id);
     		if (cur_id == "")
     			continue;
 
@@ -173,16 +175,12 @@ export default class DomOperation {
      * 根据图片dom元素获取商品id
      */
      getProductIdFromImg(imgDom) {
-    	let href = imgDom.parentNode.href;
-    	if (href == undefined || href == null) {
-    		return "";
-    	}
-    	let id = href.match(/id=([^&]*)&/);
-    	if (id == null) {
+    	let nid = imgDom.parentNode.dataset["nid"];
+    	if (nid == undefined || nid == null) {
     		return "";
     	}
 
-    	return id[1];
+    	return nid;
     }
 
     /*
