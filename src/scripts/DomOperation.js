@@ -74,26 +74,33 @@ export default class DomOperation {
       iframe.id = "next_page_iframe";
       iframe.name = "next_page_iframe"
       iframe.src = this.next_page_url;
-      iframe.width = "0";
-      iframe.height = "0";
+      iframe.width = $(document).width();
+      //iframe.style.display = "none";
       document.body.appendChild(iframe);
 
       setTimeout(() => {
-        let item_list;
-        if (this.getPageStyle() == this.GRID_STYLE) {
-          item_list = $(window.frames["next_page_iframe"].document).find("div.grid.g-clearfix").children().eq(0);
-        }
-        else {
-          item_list = $(window.frames["next_page_iframe"].document).find("div.items.g-clearfix");
-        }
+        let iframe_window = $(window.frames["next_page_iframe"].document);
 
-        this.next_page_dom_list = item_list.children();
-        this.item_index = 0;
-        this.next_page_count++;
-        this.next_page_url = this.getNextPageURL();
+        iframe_window.find('html body').animate({
+          scrollTop: $(iframe_window).height()
+        }, 3000, () => {
+          // Animation complete
+          let item_list;
+          if (this.getPageStyle() == this.GRID_STYLE) {
+            item_list = iframe_window.find("div.grid.g-clearfix").children().eq(0);
+          }
+          else {
+            item_list = iframe_window.find("div.items.g-clearfix");
+          }
 
-        console.debug("item_list", this.next_page_dom_list);
-      }, 5000);
+          this.next_page_dom_list = item_list.children();
+          this.item_index = 0;
+          this.next_page_count++;
+          this.next_page_url = this.getNextPageURL();
+
+          console.debug("item_list", this.next_page_dom_list);
+        });
+      }, 3000);
     }
 
     /*
