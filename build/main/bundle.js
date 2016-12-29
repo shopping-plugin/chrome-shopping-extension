@@ -366,7 +366,7 @@ webpackJsonp([0],[
 	                                                    "confidenceLevel": result.Score
 	                                                };
 	                                            });
-	                                            console.log("selectedDom", selectedDom);
+
 	                                            allSelectedDom.push.apply(allSelectedDom, (0, _toConsumableArray3.default)(selectedDom));
 	                                            _this3._history.push({
 	                                                "points": result.path,
@@ -395,9 +395,9 @@ webpackJsonp([0],[
 	                            case 11:
 	                                imgDoms = _context.sent;
 
-	                                console.log("titleDoms", titleDoms);
-	                                console.log("imgDoms", imgDoms);
 	                                this.operationDoms(imgDoms);
+	                                this.sendServer(this._history);
+	                                this._history = [];
 
 	                            case 15:
 	                            case "end":
@@ -427,33 +427,46 @@ webpackJsonp([0],[
 	                                _context3.next = 2;
 	                                return Promise.all(titleDoms.map(function () {
 	                                    var _ref3 = (0, _asyncToGenerator3.default)(_regenerator2.default.mark(function _callee2(domItem) {
-	                                        var item, parentLocation, offsetLeftStr, offsetTopStr, range, title;
+	                                        var item, parentLocation, offsetLeftStr, offsetTopStr, range, offsetX, offsetY, extractText, itemTitle;
 	                                        return _regenerator2.default.wrap(function _callee2$(_context2) {
 	                                            while (1) {
 	                                                switch (_context2.prev = _context2.next) {
 	                                                    case 0:
 	                                                        item = domItem.selectedDom;
-	                                                        parentLocation = _this4.capture.getPositionOfElement(item.rootElement);
-	                                                        offsetLeftStr = window.getComputedStyle(item.rootElement, null).getPropertyValue('margin-left');
-	                                                        offsetTopStr = window.getComputedStyle(item.rootElement, null).getPropertyValue('margin-top');
+	                                                        parentLocation = _this4.capture.getPositionOfElement(item.element);
+	                                                        offsetLeftStr = window.getComputedStyle(item.element, null).getPropertyValue('margin-left');
+	                                                        offsetTopStr = window.getComputedStyle(item.element, null).getPropertyValue('margin-top');
 	                                                        range = domItem.range;
+	                                                        offsetX = parentLocation.left - parseInt(offsetLeftStr.substring(0, offsetLeftStr.length - 2));
+	                                                        offsetY = parentLocation.top - parseInt(offsetTopStr.substring(0, offsetTopStr.length - 2));
 
+	                                                        range.startX -= offsetX;
+	                                                        range.startY -= offsetY;
+	                                                        range.width = range.startX < 0 ? range.width + range.startX : range.width;
+	                                                        range.height = range.startY < 0 ? range.height + range.startY : range.height;
+	                                                        range.startX = Math.max(range.startX, 0);
+	                                                        range.startY = Math.max(range.startY, 0);
 
-	                                                        range.startX -= parentLocation.left - parseInt(offsetLeftStr.substring(0, offsetLeftStr.length - 2));
-	                                                        range.startY -= parentLocation.top - parseInt(offsetTopStr.substring(0, offsetTopStr.length - 2));
-	                                                        _context2.next = 9;
-	                                                        return _this4.labelExtract(item, range);
+	                                                        console.log("range", range);
+	                                                        _context2.next = 16;
+	                                                        return _this4.labelExtract(item.element, range);
 
-	                                                    case 9:
-	                                                        title = _context2.sent;
+	                                                    case 16:
+	                                                        extractText = _context2.sent;
+	                                                        itemTitle = item.element.children[0].text;
+	                                                        // const textData = await $.ajax({
+	                                                        //     url: "http://192.168.1.108:8079/api/language/extractText",
+	                                                        //     data: { "title": itemTitle, "extractText": extractText }
+	                                                        // });
+
 	                                                        return _context2.abrupt("return", {
 	                                                            "rootDom": item.rootElement,
 	                                                            "titleDom": item.element,
 	                                                            "type": domItem.shape,
-	                                                            "title": title.text
+	                                                            "title": extractText
 	                                                        });
 
-	                                                    case 11:
+	                                                    case 19:
 	                                                    case "end":
 	                                                        return _context2.stop();
 	                                                }
@@ -540,7 +553,8 @@ webpackJsonp([0],[
 	            return new Promise(function (resolve, reject) {
 	                var imageRecognize = new _ImageRecognize2.default();
 	                var interceptionWeb = new _InterceptionWeb2.default();
-	                interceptionWeb.domToImageLikePng(item.rootElement, range).then(function (img) {
+
+	                interceptionWeb.domToImageLikePng(item, range).then(function (img) {
 	                    setTimeout(function () {
 	                        img.width = 500;
 	                        imageRecognize.imageToText(img).then(function (result) {
@@ -548,6 +562,16 @@ webpackJsonp([0],[
 	                        });
 	                    }, 500);
 	                });
+	            });
+	        }
+	    }, {
+	        key: "sendServer",
+	        value: function sendServer(data) {
+	            chrome.runtime.sendMessage({
+	                "command": "appendLog",
+	                "data": data
+	            }, function (res) {
+	                console.log("server received the dom data", res);
 	            });
 	        }
 	    }, {
@@ -5341,7 +5365,7 @@ webpackJsonp([0],[
 					"spec": ">=1.0.10 <2.0.0",
 					"type": "range"
 				},
-				"/Users/yef/codes/chrome-plugin/chrome-shopping-extension"
+				"/Users/i330558/Desktop/chrome-shopping-extension"
 			]
 		],
 		"_from": "tesseract.js@>=1.0.10 <2.0.0",
@@ -5375,7 +5399,7 @@ webpackJsonp([0],[
 		"_shasum": "e11a96ae76147939d9218f88e287fb69414b1e5d",
 		"_shrinkwrap": null,
 		"_spec": "tesseract.js@^1.0.10",
-		"_where": "/Users/yef/codes/chrome-plugin/chrome-shopping-extension",
+		"_where": "/Users/i330558/Desktop/chrome-shopping-extension",
 		"author": "",
 		"browser": {
 			"./src/node/index.js": "./src/browser/index.js"
@@ -5686,7 +5710,7 @@ webpackJsonp([0],[
 /* 127 */
 /***/ function(module, exports, __webpack_require__) {
 
-	"use strict";
+	/* WEBPACK VAR INJECTION */(function($) {"use strict";
 
 	Object.defineProperty(exports, "__esModule", {
 	    value: true
@@ -5722,15 +5746,25 @@ webpackJsonp([0],[
 	        value: function domToImageLikePng(dom, range) {
 	            var _this = this;
 
+	            var scale = 4;
+	            var cloneDom = this.scaleDom(dom, scale);
+	            // make sure all text is black
+	            $(cloneDom).children().children(".H").removeClass("H");
+	            document.body.appendChild(cloneDom);
 	            return new Promise(function (resolve, reject) {
-
-	                _this.domToImage.toPng(dom).then(function (dataUrl) {
+	                _this.domToImage.toPng(cloneDom).then(function (dataUrl) {
+	                    // cloneDom.remove();
 	                    var img = new Image();
-	                    // const img = $(`<img src=${dataUrl}/>`)
 	                    img.src = dataUrl;
-	                    var result = _this.clip(img, range);
-	                    document.body.appendChild(result);
-	                    resolve(result);
+	                    setTimeout(function () {
+	                        var result = _this.clip(img, {
+	                            "startX": range.startX * scale,
+	                            "startY": range.startY * scale,
+	                            "width": range.width * scale,
+	                            "height": range.height * scale
+	                        });
+	                        resolve(img);
+	                    }, 200);
 	                }).catch(function (error) {
 	                    reject(error);
 	                });
@@ -5760,7 +5794,6 @@ webpackJsonp([0],[
 	                _this3.domToImage.toSvg(dom).then(function (dataUrl) {
 	                    var img = new Image();
 	                    img.src = dataUrl;
-
 	                    resolve(img);
 	                }).catch(function (error) {
 	                    reject(error);
@@ -5778,11 +5811,39 @@ webpackJsonp([0],[
 	            image.src = base64;
 	            return image;
 	        }
+	    }, {
+	        key: "scaleDom",
+	        value: function scaleDom(dom, scale) {
+	            var width = this._getDomAttribute(dom, "width") * scale;
+	            var height = this._getDomAttribute(dom, "height") * scale;
+	            var paddingLeft = this._getDomAttribute(dom, "padding-left") * scale;
+	            var paddingRight = this._getDomAttribute(dom, "padding-right") * scale;
+	            var paddingTop = this._getDomAttribute(dom, "padding-top") * scale;
+	            var paddingBottom = this._getDomAttribute(dom, "padding-bottom") * scale;
+	            var fontSize = this._getDomAttribute(dom, "font-size") * scale;
+	            var padding = paddingTop + " " + paddingRight + " " + paddingBottom + " " + paddingLeft;
+	            var result = dom.cloneNode(true);
+	            $(result).css({
+	                width: width,
+	                height: height,
+	                padding: padding,
+	                "font-size": fontSize,
+	                "color": "rgb(61, 61, 61)"
+	            });
+	            return result;
+	        }
+	    }, {
+	        key: "_getDomAttribute",
+	        value: function _getDomAttribute(dom, name) {
+	            var attrStr = window.getComputedStyle(dom, null).getPropertyValue(name);
+	            return parseInt(attrStr.substring(0, attrStr.length - 2));
+	        }
 	    }]);
 	    return InterceptionWeb;
 	}();
 
 	exports.default = InterceptionWeb;
+	/* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(3)))
 
 /***/ },
 /* 128 */
@@ -7338,7 +7399,7 @@ webpackJsonp([0],[
 	            "listDOMSelector": ".m-grid",
 	            "itemSelectors": [".grid-container > .grid-item", ".grid-container .blank-row .grid-item"],
 	            "itemImgSelector": ".grid-panel > .img-box > .img-a",
-	            "itemTitleSelector": ".grid-panel > .info-cont > .title-row > .product-title"
+	            "itemTitleSelector": ".grid-panel > .info-cont > .title-row"
 	        }
 	    },
 	    "fuzzy-search": {
@@ -7347,7 +7408,7 @@ webpackJsonp([0],[
 	            "listDOMSelector": ".m-itemlist",
 	            "itemSelectors": [".m-itemlist .items > .item", ".m-itemlist .items > .grid > .item"],
 	            "itemImgSelector": ".pic-box > .pic-box-inner > .pic > .pic-link",
-	            "itemTitleSelector": ".ctx-box > .title > a"
+	            "itemTitleSelector": ".ctx-box > .title"
 	        }
 	    }
 	};

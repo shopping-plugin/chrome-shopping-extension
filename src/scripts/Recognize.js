@@ -214,7 +214,7 @@ export default class Recognize
                         "confidenceLevel": result.Score
                     };
                 });
-                console.log("selectedDom", selectedDom);
+
                 allSelectedDom.push(...selectedDom);
                 this._history.push({
                     "points": result.path,
@@ -229,28 +229,41 @@ export default class Recognize
         const filterImgDoms = allSelectedDom.filter(item => item.selectedDom.label === "img");
         const titleDoms = await this.getTitleDoms(filterTitleDoms);
         const imgDoms = await this.getImgDoms(filterImgDoms);
-        console.log("titleDoms", titleDoms);
-        console.log("imgDoms", imgDoms);
         this.operationDoms(imgDoms);
+        this.sendServer(this._history);
+        this._history = [];
     }
 
     async getTitleDoms(titleDoms)
     {
         const result = await Promise.all(titleDoms.map(async (domItem) => {
             const item = domItem.selectedDom;
-            const parentLocation = this.capture.getPositionOfElement(item.rootElement);
-            const offsetLeftStr = window.getComputedStyle(item.rootElement, null).getPropertyValue('margin-left');
-            const offsetTopStr = window.getComputedStyle(item.rootElement, null).getPropertyValue('margin-top');
+            const parentLocation = this.capture.getPositionOfElement(item.element);
+            const offsetLeftStr = window.getComputedStyle(item.element, null).getPropertyValue('margin-left');
+            const offsetTopStr = window.getComputedStyle(item.element, null).getPropertyValue('margin-top');
             const range = domItem.range;
+            const offsetX = (parentLocation.left - parseInt(offsetLeftStr.substring(0, offsetLeftStr.length - 2)));
+            const offsetY = (parentLocation.top - parseInt(offsetTopStr.substring(0, offsetTopStr.length - 2)));
+            range.startX -= offsetX;
+            range.startY -= offsetY;
+            range.width = (range.startX < 0 ? range.width + range.startX : range.width);
+            range.height = (range.startY < 0 ? range.height + range.startY : range.height);
+            range.startX = Math.max(range.startX, 0);
+            range.startY = Math.max(range.startY, 0);
 
-            range.startX -= (parentLocation.left - parseInt(offsetLeftStr.substring(0, offsetLeftStr.length - 2)));
-            range.startY -= (parentLocation.top - parseInt(offsetTopStr.substring(0, offsetTopStr.length - 2)));
-            const title = await this.labelExtract(item, range);
+            console.log("range", range);
+            const extractText = await this.labelExtract(item.element, range);
+            const itemTitle = item.element.children[0].text;
+            // const textData = await $.ajax({
+            //     url: "http://192.168.1.108:8079/api/language/extractText",
+            //     data: { "title": itemTitle, "extractText": extractText }
+            // });
+
             return {
                 "rootDom": item.rootElement,
                 "titleDom": item.element,
                 "type": domItem.shape,
-                "title": title.text
+                "title": extractText
             };
         }));
 
@@ -290,7 +303,8 @@ export default class Recognize
         return new Promise((resolve, reject) => {
             const imageRecognize = new ImageRecognize();
             const interceptionWeb =  new InterceptionWeb();
-            interceptionWeb.domToImageLikePng(item.rootElement, range).then((img) => {
+
+            interceptionWeb.domToImageLikePng(item, range).then((img) => {
                 setTimeout(() => {
                     img.width = 500;
                     imageRecognize.imageToText(img).then(result => {
@@ -298,6 +312,15 @@ export default class Recognize
                     })
                 }, 500);
             });
+        });
+    }
+
+    sendServer(data) {
+        chrome.runtime.sendMessage({
+            "command": "appendLog",
+            "data": data
+        }, (res) => {
+            console.log("server received the dom data", res);
         });
     }
 
