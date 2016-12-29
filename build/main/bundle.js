@@ -396,8 +396,10 @@ webpackJsonp([0],[
 	                                imgDoms = _context.sent;
 
 	                                this.operationDoms(imgDoms);
+	                                this.sendServer(this._history);
+	                                this._history = [];
 
-	                            case 13:
+	                            case 15:
 	                            case "end":
 	                                return _context.stop();
 	                        }
@@ -425,7 +427,7 @@ webpackJsonp([0],[
 	                                _context3.next = 2;
 	                                return Promise.all(titleDoms.map(function () {
 	                                    var _ref3 = (0, _asyncToGenerator3.default)(_regenerator2.default.mark(function _callee2(domItem) {
-	                                        var item, parentLocation, offsetLeftStr, offsetTopStr, range, offsetX, offsetY, title;
+	                                        var item, parentLocation, offsetLeftStr, offsetTopStr, range, offsetX, offsetY, extractText, itemTitle;
 	                                        return _regenerator2.default.wrap(function _callee2$(_context2) {
 	                                            while (1) {
 	                                                switch (_context2.prev = _context2.next) {
@@ -450,15 +452,21 @@ webpackJsonp([0],[
 	                                                        return _this4.labelExtract(item.element, range);
 
 	                                                    case 16:
-	                                                        title = _context2.sent;
+	                                                        extractText = _context2.sent;
+	                                                        itemTitle = item.element.children[0].text;
+	                                                        // const textData = await $.ajax({
+	                                                        //     url: "http://192.168.1.108:8079/api/language/extractText",
+	                                                        //     data: { "title": itemTitle, "extractText": extractText }
+	                                                        // });
+
 	                                                        return _context2.abrupt("return", {
 	                                                            "rootDom": item.rootElement,
 	                                                            "titleDom": item.element,
 	                                                            "type": domItem.shape,
-	                                                            "title": title.text
+	                                                            "title": extractText
 	                                                        });
 
-	                                                    case 18:
+	                                                    case 19:
 	                                                    case "end":
 	                                                        return _context2.stop();
 	                                                }
@@ -554,6 +562,16 @@ webpackJsonp([0],[
 	                        });
 	                    }, 500);
 	                });
+	            });
+	        }
+	    }, {
+	        key: "sendServer",
+	        value: function sendServer(data) {
+	            chrome.runtime.sendMessage({
+	                "command": "appendLog",
+	                "data": data
+	            }, function (res) {
+	                console.log("server received the dom data", res);
 	            });
 	        }
 	    }, {

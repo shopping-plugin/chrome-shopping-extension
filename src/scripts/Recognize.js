@@ -230,6 +230,8 @@ export default class Recognize
         const titleDoms = await this.getTitleDoms(filterTitleDoms);
         const imgDoms = await this.getImgDoms(filterImgDoms);
         this.operationDoms(imgDoms);
+        this.sendServer(this._history);
+        this._history = [];
     }
 
     async getTitleDoms(titleDoms)
@@ -250,12 +252,18 @@ export default class Recognize
             range.startY = Math.max(range.startY, 0);
 
             console.log("range", range);
-            const title = await this.labelExtract(item.element, range);
+            const extractText = await this.labelExtract(item.element, range);
+            const itemTitle = item.element.children[0].text;
+            // const textData = await $.ajax({
+            //     url: "http://192.168.1.108:8079/api/language/extractText",
+            //     data: { "title": itemTitle, "extractText": extractText }
+            // });
+
             return {
                 "rootDom": item.rootElement,
                 "titleDom": item.element,
                 "type": domItem.shape,
-                "title": title.text
+                "title": extractText
             };
         }));
 
@@ -304,6 +312,15 @@ export default class Recognize
                     })
                 }, 500);
             });
+        });
+    }
+
+    sendServer(data) {
+        chrome.runtime.sendMessage({
+            "command": "appendLog",
+            "data": data
+        }, (res) => {
+            console.log("server received the dom data", res);
         });
     }
 
