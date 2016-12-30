@@ -4565,6 +4565,11 @@ webpackJsonp([0],[
 	      console.debug("next_page_count: " + this.next_page_count);
 	      console.debug("page_size: " + this.page_size);
 	      console.debug("next_url: ", this.next_page_url);
+
+	      var iframe_div = document.createElement('div');
+	      iframe_div.id = "iframe_div";
+	      iframe_div.style.visibility = "hidden";
+	      document.body.appendChild(iframe_div);
 	    }
 	  }, {
 	    key: "getNextPageURL",
@@ -4594,7 +4599,7 @@ webpackJsonp([0],[
 	      iframe.src = this.next_page_url;
 	      iframe.width = $(document).width();
 	      //iframe.style.display = "none";
-	      document.body.appendChild(iframe);
+	      $('#iframe_div').append(iframe);
 
 	      setTimeout(function () {
 	        var iframe_window = $(window.frames["next_page_iframe"].document);
@@ -5365,7 +5370,7 @@ webpackJsonp([0],[
 					"spec": ">=1.0.10 <2.0.0",
 					"type": "range"
 				},
-				"/Users/i330558/Desktop/chrome-shopping-extension"
+				"/Users/yef/codes/chrome-plugin/chrome-shopping-extension"
 			]
 		],
 		"_from": "tesseract.js@>=1.0.10 <2.0.0",
@@ -5399,7 +5404,7 @@ webpackJsonp([0],[
 		"_shasum": "e11a96ae76147939d9218f88e287fb69414b1e5d",
 		"_shrinkwrap": null,
 		"_spec": "tesseract.js@^1.0.10",
-		"_where": "/Users/i330558/Desktop/chrome-shopping-extension",
+		"_where": "/Users/yef/codes/chrome-plugin/chrome-shopping-extension",
 		"author": "",
 		"browser": {
 			"./src/node/index.js": "./src/browser/index.js"

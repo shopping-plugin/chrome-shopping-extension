@@ -49,7 +49,11 @@ export default class DomOperation {
 
       console.debug("next_page_count: " + this.next_page_count);
       console.debug("page_size: " + this.page_size);
-      console.debug("next_url: ", this.next_page_url);
+
+      let iframe_div = document.createElement('div');
+      iframe_div.id = "iframe_div";
+      iframe_div.style.visibility = "hidden";
+      document.body.appendChild(iframe_div);
     }
 
     getNextPageURL() {
@@ -70,13 +74,14 @@ export default class DomOperation {
         $('#next_page_iframe').remove();
       }
 
+      console.debug("next_url: ", this.next_page_url);
+
       let iframe = document.createElement('iframe');
       iframe.id = "next_page_iframe";
       iframe.name = "next_page_iframe"
       iframe.src = this.next_page_url;
       iframe.width = $(document).width();
-      //iframe.style.display = "none";
-      document.body.appendChild(iframe);
+      $('#iframe_div').append(iframe);
 
       setTimeout(() => {
         let iframe_window = $(window.frames["next_page_iframe"].document);
