@@ -1,10 +1,11 @@
 ## 工作进程
 ### shenqianqian
-- 
-
-### lilonglong
 -
 
+### lilonglong
+- completed |__| and |--|
+- 处理log和bug
+- ocr截取精度解决下
 
 
 
