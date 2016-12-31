@@ -47,8 +47,8 @@ export default class DomOperation {
       this.next_page_count = a[0].innerText;
       this.next_page_url = this.getNextPageURL();
 
-      console.debug("next_page_count: " + this.next_page_count);
-      console.debug("page_size: " + this.page_size);
+    //   console.debug("next_page_count: " + this.next_page_count);
+    //   console.debug("page_size: " + this.page_size);
 
       let iframe_div = document.createElement('div');
       iframe_div.id = "iframe_div";
@@ -74,7 +74,7 @@ export default class DomOperation {
         $('#next_page_iframe').remove();
       }
 
-      console.debug("next_url: ", this.next_page_url);
+    //   console.debug("next_url: ", this.next_page_url);
 
       let iframe = document.createElement('iframe');
       iframe.id = "next_page_iframe";
@@ -103,7 +103,7 @@ export default class DomOperation {
           this.next_page_count++;
           this.next_page_url = this.getNextPageURL();
 
-          console.debug("item_list", this.next_page_dom_list);
+        //   console.debug("item_list", this.next_page_dom_list);
         });
       }, 3000);
     }
@@ -142,7 +142,7 @@ export default class DomOperation {
      */
     filterDom(containerDivList, imgDivList, typeList) {
     	let page_style = this.getPageStyle();
-      console.debug(containerDivList, imgDivList, typeList);
+    //   console.debug(containerDivList, imgDivList, typeList);
 
     	for (let i = 0; i < containerDivList.length; i++) {
     		let cur_item = containerDivList[i];
@@ -150,7 +150,7 @@ export default class DomOperation {
     		let cur_type = typeList[i];
 
     		let cur_id = this.getProductIdFromImg(cur_img);
-        console.debug("cur_id: " + cur_id);
+        // console.debug("cur_id: " + cur_id);
     		if (cur_id == "")
     			continue;
 
@@ -230,10 +230,10 @@ export default class DomOperation {
           break;
         }
         else {
-          console.debug("item index: " + this.item_index);
+        //   console.debug("item index: " + this.item_index);
           let product = this.next_page_dom_list.eq(this.item_index);
           this.item_index++;
-      		console.debug("product", product);
+      // 		console.debug("product", product);
 
           // 检测是否为商品
           if (page_style == this.GRID_STYLE && !product.hasClass("item J_MouserOnverReq")) {
@@ -406,7 +406,7 @@ export default class DomOperation {
     getNewProductByAPI() {
     	while (true) {
     		let product = this.product_list.shift();
-    		console.debug("product", product);
+    		// console.debug("product", product);
 
     		// 商品列表为空，调用API取下一页商品
     		if (product == undefined) {
@@ -508,7 +508,7 @@ export default class DomOperation {
      */
     createTab(url) {
     	chrome.runtime.sendMessage({command: "createTab", target: url}, (response) => {
-    		console.log(response.result);
+    		// console.log(response.result);
     	});
     }
 

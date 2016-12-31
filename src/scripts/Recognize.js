@@ -63,7 +63,6 @@ export default class Recognize
             this._canvas.height = $(canvasPath).height();
             this._rc = this.getCanvasRect(this._canvas);
             this._g = this._canvas.getContext('2d');
-            console.log("resize", $(canvasPath).width(), $(canvasPath).height());
         }, 300);
     }
 
@@ -180,7 +179,7 @@ export default class Recognize
         let allSelectedDom = new Array();
         results.map(result => {
             this.drawText("Result: " + this.config.noteType[result.Name] + " (" + this.util.round(result.Score,2) + ").");
-            console.log("Result: " + this.config.noteType[result.Name] + " (" + this.util.round(result.Score,2) + ").", result);
+            // console.log("Result: " + this.config.noteType[result.Name] + " (" + this.util.round(result.Score,2) + ").", result);
             if (result.type === "2" && result.Score > 0.01)
             {
                 const range = this.util.getRange(result.path);
@@ -211,7 +210,6 @@ export default class Recognize
                 });
             }
         });
-        console.log("allSelectedDom", allSelectedDom);
         const filterTitleDoms = allSelectedDom.filter(item => item.selectedDom.label === "label");
         const filterImgDoms = allSelectedDom.filter(item => item.selectedDom.label === "img");
         const titleDoms = await this.getTitleDoms(filterTitleDoms);
@@ -239,7 +237,6 @@ export default class Recognize
             range.startX = Math.max(range.startX, 0);
             range.startY = Math.max(range.startY, 0);
 
-            console.log("range", range);
             const extractText = await this.labelExtract(item.element, range);
             const itemTitle = item.element.children[0].text;
             // const textData = await $.ajax({
@@ -316,7 +313,7 @@ export default class Recognize
             "command": "appendLog",
             "data": data
         }, (res) => {
-            console.log("server received the dom data", res);
+            // console.log("server received the dom data", res);
         });
     }
 

@@ -15,7 +15,6 @@ export default class ImageRecognize
                 reject(error);
             }).then(result => {
                 resolve(result);
-                console.log("result", result);
             });
         })
     }

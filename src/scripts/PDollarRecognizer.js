@@ -217,6 +217,7 @@ export default class PDollarRecognizer
             }
             return next;
         }, null);
-        return edges;
+        const result = edges.filter(edge => edge.length > 1);
+        return result;
     }
 }
