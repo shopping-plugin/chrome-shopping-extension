@@ -7,7 +7,28 @@
 - 处理log和bug
 - ocr截取精度解决下
 
+### usage
+#### download
+- git clone https://github.com/shopping-plugin/chrome-shopping-extension.git
+- npm install
+- npm install -dev
 
+#### develop
+- git status 看自己有没有遗留的提交
+- git pull origin master 更新自己的分支
+- coding
+- git add .
+- git commit -m "content";
+- if 其他人有提交 git pull origin master
+- git push origin master
+
+#### global setting 换电脑
+- npm install -g webpack
+- npm install -g less
+- 安装node
+- 安装 git
+- 安装 atom
+- atom plugins: platformio-ide-terminal emmet git-controll autocomplete-path autocomplete-module 
 
 ## 后续任务 11 10
 
