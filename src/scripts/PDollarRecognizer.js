@@ -11,12 +11,12 @@ export default class PDollarRecognizer
         const NumPointClouds = 4;
         this.PointClouds = new Array(NumPointClouds);
         this.subPoints = new Array(4);
-        this.PointClouds[0] = new PointCloud({ name: "31", points: new Array(
+        this.PointClouds[0] = new PointCloud({ name: "30", points: new Array(
             new Point(100,0,1),new Point(0,100,1),
             new Point(100,0,2),new Point(200,100,2),
             new Point(100,0,3),new Point(0,300,3)
         ) });
-        this.PointClouds[1] = new PointCloud({ name: "41", points: new Array(
+        this.PointClouds[1] = new PointCloud({ name: "40", points: new Array(
             new Point(100,0,1),new Point(0,300,1),
             new Point(0,200,2),new Point(100,300,2),
             new Point(200,200,2)
@@ -33,6 +33,16 @@ export default class PDollarRecognizer
             new Point(200,100,1),new Point(100 + pai, 100 - pai,1),
             new Point(100,0,1),new Point(100 - pai, 100 - pai, 1)
         )});
+        this.PointClouds[4] = new PointCloud({ name: "50", points: new Array(
+            new Point(0,0,1),new Point(0,100,1),
+            new Point(200,100,1),new Point(200,100,2),
+            new Point(200,0,2)
+        ) });
+        this.PointClouds[5] = new PointCloud({ name: "60", points: new Array(
+            new Point(0,0,1),new Point(0,100,1),
+            new Point(0,0,2),new Point(200,0,2),
+            new Point(200,100,2)
+        ) });
 
         this.subPoints[0] = new PointCloud({ name: "01", points: new Array(
             new Point(100,0,1), new Point(0,100,1)
@@ -43,7 +53,22 @@ export default class PDollarRecognizer
         this.subPoints[2] = new PointCloud({ name: "03", points: new Array(
             new Point(0,0,1), new Point(0,100,1)
         )});
-        this.subPoints[3] = new PointCloud({ name: "circle", points: new Array(
+        this.subPoints[3] = new PointCloud({ name: "04", points: new Array(
+            new Point(0,0,1), new Point(100,0,1)
+        )});
+        this.subPoints[4] = new PointCloud({ name: "05", points: new Array(
+            new Point(0,100,1), new Point(100,100,1), new Point(100,0,1)
+        )});
+        this.subPoints[5] = new PointCloud({ name: "06", points: new Array(
+            new Point(0,0,1), new Point(0,100,1), new Point(100,100,1)
+        )});
+        this.subPoints[6] = new PointCloud({ name: "07", points: new Array(
+            new Point(0,100,1), new Point(0,0,1), new Point(100,0,1)
+        )});
+        this.subPoints[7] = new PointCloud({ name: "08", points: new Array(
+            new Point(0,0,1), new Point(100,0,1), new Point(100,100,)
+        )});
+        this.subPoints[8] = new PointCloud({ name: "09", points: new Array(
             new Point(0,100,1),new Point(100 - pai, 100 + pai,1),
             new Point(100,200,1),new Point(100 + pai, 100 + pai, 1),
             new Point(200,100,1),new Point(100 + pai, 100 - pai,1),

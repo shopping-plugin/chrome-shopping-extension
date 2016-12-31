@@ -186,19 +186,6 @@ export default class Recognize
                 const range = this.util.getRange(result.path);
                 let selectedDom = null;
                 let radius = null;
-                // not confirmed cross
-                if (result.Name === "10" || result.Name === "20")
-                {
-                    let type = parseInt(result.Name);
-                    if (range.outerRadius < this.config.diff.boundary)
-                    {
-                        result.Name = `${ type + 1 }`;
-                    }
-                    else
-                    {
-                        result.Name = `${ type + 2 }`;
-                    }
-                }
 
                 selectedDom = this.capture.getElementByCapture(range.outerCentroid, range.outerRadius).map( item => {
                     return {
@@ -230,6 +217,7 @@ export default class Recognize
         const titleDoms = await this.getTitleDoms(filterTitleDoms);
         const imgDoms = await this.getImgDoms(filterImgDoms);
         this.operationDoms(imgDoms);
+        this.filterText(titleDoms);
         this.sendServer(this._history);
         this._history = [];
     }
@@ -289,13 +277,21 @@ export default class Recognize
         {
             return false;
         }
-        console.log("i have run at this state.");
+
         const containerDivs = imgDoms.map(item => item.rootDom);
         const imgDivs = imgDoms.map(item => item.imgDoms);
         const typeList = imgDoms.map(item => {
             return (item.type.includes("circle") ? "SIGN_WHITE" : "SIGN_BLACK");
         });
-        this.domOperation.filter(containerDivs, imgDivs, typeList);
+        this.domOperation.filterDom(containerDivs, imgDivs, typeList);
+    }
+
+    filterText(data)
+    {
+        if (!data || data.length < 1 )
+        {
+            return false;
+        }
     }
 
     labelExtract(item, range)
