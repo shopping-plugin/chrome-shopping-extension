@@ -1,0 +1,18 @@
+body{
+    width: 25px;
+}
+
+.icon{
+    width:15px;
+    height:15px;
+}
+
+.popup-btn{
+    margin-left: 5px;
+    margin-right: 5px;
+    outline: 0;
+}
+
+.disabled{
+    -webkit-filter: grayscale(100%);
+}

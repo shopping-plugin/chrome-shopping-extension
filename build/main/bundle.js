@@ -4532,17 +4532,16 @@ webpackJsonp([0],[
 	    this.TEXT_ADD = "TEXT_ADD"; // 小圈
 	    this.TEXT_REMOVE = "TEXT_REMOVE"; // 小叉
 
-	    //根据插件页面发出的消息进行回应
+	    // 画布状态
+	    this.brush = false;
+
+	    //根据popup页面发出的消息进行回应
 	    chrome.runtime.onMessage.addListener(function (request, sender, sendResponse) {
-	      // 根据黑白名单对页面dom元素进行重排序，并利用API返回的商品列表进行页面空白补全
-	      if (request.command == "filter") {
-	        //filterDom(request);
-	        //getProductListAndFilter(request);
-	        sendResponse({ result: "filtering done" });
+	      if (request.command == "brush") {
+	        _this.toggleBrush();
 	      }
-	      // 获取异步API调用的返回值：商品列表
-	      if (request.command == "product_list") {
-	        _this.product_list = $.parseJSON(request.list).tbk_item_get_response.results.n_tbk_item;
+	      if (request.command == "buttonStatus") {
+	        sendResponse({ brush: _this.brush });
 	      }
 	    });
 	  }
@@ -4902,6 +4901,27 @@ webpackJsonp([0],[
 	      chrome.runtime.sendMessage({ command: "createTab", target: url }, function (response) {
 	        //console.log(response.result);
 	      });
+	    }
+
+	    /*
+	     * 画笔切换动作
+	     */
+
+	  }, {
+	    key: "toggleBrush",
+	    value: function toggleBrush() {
+	      // 开启画笔
+	      if (!this.brush) {
+	        // TODO
+	        console.debug("open brush");
+	        this.brush = true;
+	      }
+	      // 关闭画笔
+	      else {
+	          // TODO
+	          console.debug("close brush");
+	          this.brush = false;
+	        }
 	    }
 	  }]);
 	  return DomOperation;
