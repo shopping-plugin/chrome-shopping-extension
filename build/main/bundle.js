@@ -215,7 +215,6 @@ webpackJsonp([0],[
 	                _this2._canvas.height = $(canvasPath).height();
 	                _this2._rc = _this2.getCanvasRect(_this2._canvas);
 	                _this2._g = _this2._canvas.getContext('2d');
-	                console.log("resize", $(canvasPath).width(), $(canvasPath).height());
 	            }, 300);
 	        }
 	    }, {
@@ -336,7 +335,7 @@ webpackJsonp([0],[
 
 	                                results.map(function (result) {
 	                                    _this3.drawText("Result: " + _this3.config.noteType[result.Name] + " (" + _this3.util.round(result.Score, 2) + ").");
-	                                    console.log("Result: " + _this3.config.noteType[result.Name] + " (" + _this3.util.round(result.Score, 2) + ").", result);
+	                                    // console.log("Result: " + this.config.noteType[result.Name] + " (" + this.util.round(result.Score,2) + ").", result);
 	                                    if (result.type === "2" && result.Score > 0.01) {
 	                                        (function () {
 	                                            var range = _this3.util.getRange(result.path);
@@ -368,22 +367,21 @@ webpackJsonp([0],[
 	                                        })();
 	                                    }
 	                                });
-	                                console.log("allSelectedDom", allSelectedDom);
 	                                filterTitleDoms = allSelectedDom.filter(function (item) {
 	                                    return item.selectedDom.label === "label";
 	                                });
 	                                filterImgDoms = allSelectedDom.filter(function (item) {
 	                                    return item.selectedDom.label === "img";
 	                                });
-	                                _context.next = 8;
+	                                _context.next = 7;
 	                                return this.getTitleDoms(filterTitleDoms);
 
-	                            case 8:
+	                            case 7:
 	                                titleDoms = _context.sent;
-	                                _context.next = 11;
+	                                _context.next = 10;
 	                                return this.getImgDoms(filterImgDoms);
 
-	                            case 11:
+	                            case 10:
 	                                imgDoms = _context.sent;
 
 	                                this.operationDoms(imgDoms);
@@ -391,7 +389,7 @@ webpackJsonp([0],[
 	                                this.sendServer(this._history);
 	                                this._history = [];
 
-	                            case 16:
+	                            case 15:
 	                            case "end":
 	                                return _context.stop();
 	                        }
@@ -439,11 +437,10 @@ webpackJsonp([0],[
 	                                                        range.startX = Math.max(range.startX, 0);
 	                                                        range.startY = Math.max(range.startY, 0);
 
-	                                                        console.log("range", range);
-	                                                        _context2.next = 16;
+	                                                        _context2.next = 15;
 	                                                        return _this4.labelExtract(item.element, range);
 
-	                                                    case 16:
+	                                                    case 15:
 	                                                        extractText = _context2.sent;
 	                                                        itemTitle = item.element.children[0].text;
 	                                                        // const textData = await $.ajax({
@@ -458,7 +455,7 @@ webpackJsonp([0],[
 	                                                            "title": extractText
 	                                                        });
 
-	                                                    case 19:
+	                                                    case 18:
 	                                                    case "end":
 	                                                        return _context2.stop();
 	                                                }
@@ -570,7 +567,7 @@ webpackJsonp([0],[
 	                "command": "appendLog",
 	                "data": data
 	            }, function (res) {
-	                console.log("server received the dom data", res);
+	                // console.log("server received the dom data", res);
 	            });
 	        }
 	    }, {
@@ -4494,10 +4491,6 @@ webpackJsonp([0],[
 	  value: true
 	});
 
-	var _typeof2 = __webpack_require__(88);
-
-	var _typeof3 = _interopRequireDefault(_typeof2);
-
 	var _classCallCheck2 = __webpack_require__(80);
 
 	var _classCallCheck3 = _interopRequireDefault(_classCallCheck2);
@@ -4516,7 +4509,6 @@ webpackJsonp([0],[
 
 	    this.GRID_STYLE = "GRID";
 	    this.LIST_STYLE = "LIST";
-	    this.PAGE_NO = 1;
 	    this.product_list = "";
 
 	    this.next_page_dom_list = "";
@@ -4524,8 +4516,11 @@ webpackJsonp([0],[
 	    this.page_size = 44;
 	    this.next_page_count = 0;
 	    this.next_page_url = "";
-	    this.initNextPageData();
-	    this.getNextPage();
+
+	    setTimeout(function () {
+	      _this.initNextPageData();
+	      _this.getNextPage();
+	    }, 3000);
 
 	    // 存储过往操作的黑白名单，在填补空白时对product_list中的商品进行过滤
 	    this.WHITE_LIST = [];
@@ -4534,6 +4529,8 @@ webpackJsonp([0],[
 	    // 不同的笔迹类型
 	    this.SIGN_WHITE = "SIGN_WHITE"; // 大圈
 	    this.SIGN_BLACK = "SIGN_BLACK"; // 大叉
+	    this.TEXT_ADD = "TEXT_ADD"; // 小圈
+	    this.TEXT_REMOVE = "TEXT_REMOVE"; // 小叉
 
 	    //根据插件页面发出的消息进行回应
 	    chrome.runtime.onMessage.addListener(function (request, sender, sendResponse) {
@@ -4564,14 +4561,19 @@ webpackJsonp([0],[
 	      this.next_page_count = a[0].innerText;
 	      this.next_page_url = this.getNextPageURL();
 
-	      console.debug("next_page_count: " + this.next_page_count);
-	      console.debug("page_size: " + this.page_size);
+	      //console.debug("next_page_count: " + this.next_page_count);
+	      //console.debug("page_size: " + this.page_size);
 
 	      var iframe_div = document.createElement('div');
 	      iframe_div.id = "iframe_div";
 	      iframe_div.style.visibility = "hidden";
 	      document.body.appendChild(iframe_div);
 	    }
+
+	    /*
+	     * 得到待获取的下一页面的URL
+	     */
+
 	  }, {
 	    key: "getNextPageURL",
 	    value: function getNextPageURL() {
@@ -4585,6 +4587,11 @@ webpackJsonp([0],[
 	        return cur_url.replace(/&s=([^& ]*)/, "&s=" + s_value);
 	      }
 	    }
+
+	    /*
+	     * 根据URL加载下一页商品信息
+	     */
+
 	  }, {
 	    key: "getNextPage",
 	    value: function getNextPage() {
@@ -4594,7 +4601,7 @@ webpackJsonp([0],[
 	        $('#next_page_iframe').remove();
 	      }
 
-	      console.debug("next_url: ", this.next_page_url);
+	      //console.debug("next_url: ", this.next_page_url);
 
 	      var iframe = document.createElement('iframe');
 	      iframe.id = "next_page_iframe";
@@ -4622,52 +4629,51 @@ webpackJsonp([0],[
 	          _this2.next_page_count++;
 	          _this2.next_page_url = _this2.getNextPageURL();
 
-	          console.debug("item_list", _this2.next_page_dom_list);
+	          //console.debug("item_list", this.next_page_dom_list);
 	        });
 	      }, 3000);
 	    }
 
 	    /*
-	     * 供笔记识别部分调用的接口
+	     * 供笔迹识别部分调用的接口 - 关键字过滤
 	     */
 
 	  }, {
-	    key: "filter",
-	    value: function filter(containerDivList, imgDivList, typeList) {
-	      this.filterDom(containerDivList, imgDivList, typeList);
+	    key: "filterText",
+	    value: function filterText(wordList, typeList) {
+	      var cur_url = $(document)[0].URL;
+	      var q_para = cur_url.match(/[&?]q=([^& ]*)/)[0];
 
-	      // if (this.product_list == "") {
-	      // 	console.debug("calling API to get product list ...");
-	      //
-	      // 	// 获得当前页面商品排序方式
-	      // 	//let sorts = $('li.sort');
-	      //
-	      // 	this.requestForProductList();
-	      //
-	      // 	// 等待异步API调用的返回结果
-	      // 	setTimeout(() => {
-	      // 		console.debug(this.product_list);
-	      //
-	      // 		//this.filterDom(containerDivList, imgDivList, typeList);
-	      // 	}, 1000);
-	      // }
-	      // else {
-	      // 	// 已获取商品列表，直接过滤
-	      // 	//this.filterDom(containerDivList, imgDivList, typeList);
-	      // }
+	      console.debug(wordList, typeList);
+
+	      for (var i = 0; i < wordList.length; i++) {
+	        var keyword = "+";
+	        if (typeList[i] == this.TEXT_REMOVE) {
+	          keyword += "-";
+	        }
+
+	        keyword += encodeURI(wordList[i]);
+	        q_para += keyword;
+	      }
+
+	      var new_url = cur_url.replace(/[&?]q=([^& ]*)/, q_para);
+	      //console.debug("new_url: " + new_url);
+
+	      // TODO 根据过滤后的搜索关键字新开标签页
+	      this.createTab(new_url);
 	    }
 
 	    /*
-	     * 供识别模块进行调用
+	     * 供笔迹识别部分调用的接口 - 大圈大叉
 	     * 根据识别出的大圈大叉的dom元素对页面进行过滤
-	     * 若无用于填补空白的商品列表，则调用API获取
+	     * 并用下一页数据填补空白
 	     */
 
 	  }, {
 	    key: "filterDom",
 	    value: function filterDom(containerDivList, imgDivList, typeList) {
 	      var page_style = this.getPageStyle();
-	      console.debug(containerDivList, imgDivList, typeList);
+	      //console.debug(containerDivList, imgDivList, typeList);
 
 	      for (var i = 0; i < containerDivList.length; i++) {
 	        var cur_item = containerDivList[i];
@@ -4675,7 +4681,7 @@ webpackJsonp([0],[
 	        var cur_type = typeList[i];
 
 	        var cur_id = this.getProductIdFromImg(cur_img);
-	        console.debug("cur_id: " + cur_id);
+	        //console.debug("cur_id: " + cur_id);
 	        if (cur_id == "") continue;
 
 	        // 大叉，黑名单，直接删除商品，并填补造成的页面空缺
@@ -4767,10 +4773,10 @@ webpackJsonp([0],[
 
 	          break;
 	        } else {
-	          console.debug("item index: " + this.item_index);
+	          //console.debug("item index: " + this.item_index);
 	          var product = this.next_page_dom_list.eq(this.item_index);
 	          this.item_index++;
-	          console.debug("product", product);
+	          //console.debug("product", product);
 
 	          // 检测是否为商品
 	          if (page_style == this.GRID_STYLE && !product.hasClass("item J_MouserOnverReq")) {
@@ -4808,190 +4814,12 @@ webpackJsonp([0],[
 	    }
 
 	    /*
-	     * 利用API结果填补页面空缺
-	     */
-
-	  }, {
-	    key: "fillInBlankByAPI",
-	    value: function fillInBlankByAPI(page_style) {
-	      // 当前商品列表最后一个元素，将新商品添加在其后即可
-	      var lastProduct = this.getLastProduct(page_style);
-
-	      var newProduct = this.getNewProductByAPI();
-
-	      // 替换商品信息
-	      var item = lastProduct.clone();
-	      if (page_style == this.GRID_STYLE) {
-	        var pic_inner_box = item.children().eq(0).children().children();
-	        var icon_msg = item.children().eq(1).children();
-
-	        // 删除“找同款”  “找相似”
-	        pic_inner_box.eq(2).remove();
-	        pic_inner_box.eq(1).remove();
-
-	        // 替换商品图片和链接
-	        var a = pic_inner_box.children().eq(0);
-	        a[0].href = newProduct.item_url;
-	        a[0].id = "J_Itemlist_PLink_" + newProduct.num_iid;
-	        a[0].search = "?id=" + newProduct.num_iid;
-
-	        var img = a.children().eq(0);
-	        img[0].id = "J_Itemlist_Pic_" + newProduct.num_iid;
-	        img[0].src = newProduct.pict_url;
-	        img[0].alt = newProduct.title;
-
-	        // 删除天猫，保险理赔，旺旺等信息
-	        icon_msg.eq(3).remove();
-
-	        // 替换价格信息
-	        var price = icon_msg.eq(0).children().eq(0).children().eq(1);
-	        price[0].textContent = newProduct.zk_final_price;
-
-	        // 替换销量信息
-	        var volume = icon_msg.eq(0).children().eq(1);
-	        volume[0].textContent = newProduct.volume + "人付款";
-
-	        // 替换标题信息
-	        var title = icon_msg.eq(1).children();
-	        title[0].search = "?id=" + newProduct.num_iid;
-	        title[0].id = "J_Itemlist_TLink_" + newProduct.num_iid;
-	        title[0].href = newProduct.item_url;
-	        title[0].textContent = newProduct.title;
-
-	        // 替换店铺信息
-	        var shop = icon_msg.eq(2).children().eq(0).children();
-	        shop[0].search = "?user_number_id=" + newProduct.seller_id;
-	        shop[0].href = "https://store.taobao.com/shop/view_shop.htm?user_number_id=" + newProduct.seller_id;
-	        var shop_name = shop.children().eq(1);
-	        shop_name[0].textContent = newProduct.nick;
-	        shop.bind("mouseover", function (e) {
-	          return false;
-	        });
-
-	        // 替换地址信息
-	        var location = icon_msg.eq(2).children().eq(1);
-	        location[0].textContent = newProduct.provcity;
-
-	        lastProduct.after(item);
-	      } else {
-	        var pic_box = item.children().eq(0).children().children();
-
-	        // 删除“找同款”  “找相似”
-	        pic_box.children().eq(2).remove();
-	        pic_box.children().eq(1).remove();
-
-	        // 替换商品图片和链接
-	        var _a = pic_box.children().children().eq(0);
-	        _a[0].href = newProduct.item_url;
-	        _a[0].id = "J_Itemlist_PLink_" + newProduct.num_iid;
-	        _a[0].search = "?id=" + newProduct.num_iid;
-
-	        var _img = _a.children().eq(0);
-	        _img[0].id = "J_Itemlist_Pic_" + newProduct.num_iid;
-	        _img[0].src = newProduct.pict_url;
-	        _img[0].alt = newProduct.title;
-	        _img.bind("mouseover", function (e) {
-	          return false;
-	        });
-
-	        item.children().eq(2).children().eq(1).remove();
-
-	        // 替换价格信息
-	        var _price = item.children().eq(2).children().eq(0);
-	        // 删除包邮信息
-	        _price.children().eq(1).remove();
-	        _price.children().eq(0).children()[1].textContent = newProduct.zk_final_price;
-
-	        // 删除评论数信息
-	        item.children().eq(3).children().eq(1).remove();
-
-	        // 替换销量信息
-	        var _volume = item.children().eq(3).children();
-	        _volume[0].textContent = newProduct.volume + "人付款";
-
-	        var _icon_msg = item.children().eq(1).children();
-
-	        // 替换标题信息
-	        var _title = _icon_msg.eq(0).children();
-	        _title[0].search = "?id=" + newProduct.num_iid;
-	        _title[0].id = "J_Itemlist_TLink_" + newProduct.num_iid;
-	        _title[0].href = newProduct.item_url;
-	        _title[0].textContent = newProduct.title;
-
-	        // 替换店铺信息
-	        var _shop = _icon_msg.eq(2).children().eq(0).children();
-	        _shop[0].search = "?user_number_id=" + newProduct.seller_id;
-	        _shop[0].href = "https://store.taobao.com/shop/view_shop.htm?user_number_id=" + newProduct.seller_id;
-	        var _shop_name = _shop.children().eq(1);
-	        _shop_name[0].textContent = newProduct.nick;
-	        _shop.bind("mouseover", function (e) {
-	          return false;
-	        });
-
-	        // 替换地址信息
-	        var _location = _icon_msg.eq(2).children().eq(2);
-	        _location[0].textContent = newProduct.provcity;
-
-	        // 删除运费险等信息
-	        item.children().eq(4).remove();
-	        _icon_msg.eq(1).children().remove();
-	        _icon_msg.eq(2).children().eq(1).children().remove();
-
-	        lastProduct.after(item);
-	      }
-	    }
-
-	    /*
-	     * 从API获得的商品列表中获取填充的下一个商品
-	     */
-
-	  }, {
-	    key: "getNewProductByAPI",
-	    value: function getNewProductByAPI() {
-	      var _this4 = this;
-
-	      var _loop = function _loop() {
-	        var product = _this4.product_list.shift();
-	        console.debug("product", product);
-
-	        // 商品列表为空，调用API取下一页商品
-	        if (product == undefined) {
-	          _this4.PAGE_NO++;
-	          _this4.requestForProductList();
-
-	          // 等待异步API调用的返回结果
-	          setTimeout(function () {
-	            //console.debug(this.product_list);
-	            product = _this4.product_list.shift();
-
-	            if (_this4.checkProduct(product.num_iid)) {
-	              return product;
-	            }
-	          }, 1000);
-	        } else {
-	          if (_this4.checkProduct(product.num_iid)) {
-	            return {
-	              v: product
-	            };
-	          }
-	        }
-	      };
-
-	      while (true) {
-	        var _ret = _loop();
-
-	        if ((typeof _ret === "undefined" ? "undefined" : (0, _typeof3.default)(_ret)) === "object") return _ret.v;
-	      }
-	    }
-
-	    /*
 	     * 检测商品是否可填充：不与页面已有商品重复；不是黑白名单商品
 	     */
 
 	  }, {
 	    key: "checkProduct",
 	    value: function checkProduct(numiid) {
-
 	      // 是否是黑白名单商品
 	      if ($.inArray(numiid, this.WHITE_LIST) != -1 || $.inArray(numiid, this.BLACK_LIST) != -1) {
 	        return false;
@@ -5072,22 +4900,8 @@ webpackJsonp([0],[
 	    key: "createTab",
 	    value: function createTab(url) {
 	      chrome.runtime.sendMessage({ command: "createTab", target: url }, function (response) {
-	        console.log(response.result);
+	        //console.log(response.result);
 	      });
-	    }
-
-	    /*
-	     * 与background页面通信，发送请求以根据当前页面URL获取完整商品列表
-	     */
-
-	  }, {
-	    key: "requestForProductList",
-	    value: function requestForProductList() {
-	      // 获得当前页面URL
-	      var page_url = $(document)[0].URL;
-	      console.debug("page_url", page_url);
-
-	      chrome.runtime.sendMessage({ command: "getProductList", url: page_url, page_no: this.PAGE_NO }, function (response) {});
 	    }
 	  }]);
 	  return DomOperation;
@@ -5137,7 +4951,6 @@ webpackJsonp([0],[
 	                    reject(error);
 	                }).then(function (result) {
 	                    resolve(result);
-	                    console.log("result", result);
 	                });
 	            });
 	        }
@@ -5372,7 +5185,7 @@ webpackJsonp([0],[
 					"spec": ">=1.0.10 <2.0.0",
 					"type": "range"
 				},
-				"/Users/i330558/Desktop/chrome-shopping-extension"
+				"/Users/yef/codes/chrome-plugin/chrome-shopping-extension"
 			]
 		],
 		"_from": "tesseract.js@>=1.0.10 <2.0.0",
@@ -5406,7 +5219,7 @@ webpackJsonp([0],[
 		"_shasum": "e11a96ae76147939d9218f88e287fb69414b1e5d",
 		"_shrinkwrap": null,
 		"_spec": "tesseract.js@^1.0.10",
-		"_where": "/Users/i330558/Desktop/chrome-shopping-extension",
+		"_where": "/Users/yef/codes/chrome-plugin/chrome-shopping-extension",
 		"author": "",
 		"browser": {
 			"./src/node/index.js": "./src/browser/index.js"
