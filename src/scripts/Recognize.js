@@ -20,6 +20,7 @@ export default class Recognize
             "webConfig": args.webConfig
         });
         this.domOperation = new DomOperation();
+        this.markingDomState = null;
         this._history = new Array();
         this.webConfig = args.webConfig;
         this.config = config.noteConfig;
@@ -33,8 +34,10 @@ export default class Recognize
                 <span style="background-color:#ffff88;">The &lt;canvas&gt; element is not supported by this browser.</span>
             </canvas>`);
         this._canvas = this._$recognize[0];
+
         const canvasPath = this.webConfig.listDOMSelector;
         $(canvasPath).append(this._$recognize[0]);
+        this.domToggle(false);
         this.onLoadEvent();
         $(window).resize(() => {
             this.canvasResize();
@@ -48,11 +51,28 @@ export default class Recognize
     domDetach()
     {
         $(this._canvas).detach();
+        this.markingDomState = false;
     }
 
     domAttach()
     {
         $(this.webConfig.listDOMSelector).append(this._canvas);
+        this.markingDomState = true;
+        this.domToggle(true);
+    }
+
+    domToggle(value)
+    {
+        if (value !== undefined)
+        {
+            $(this._canvas).toggle(value);
+            this.markingDomState = value;
+        }
+        else
+        {
+            $(this._canvas).toggle();
+            this.markingDomState = !this.markingDomState;
+        }
     }
 
     canvasResize()

@@ -25,19 +25,6 @@ export default class DomOperation {
         this.SIGN_BLACK = "SIGN_BLACK";	// 大叉
         this.TEXT_ADD = "TEXT_ADD"; // 小圈
         this.TEXT_REMOVE = "TEXT_REMOVE"; // 小叉
-
-        // 画布状态
-        this.brush = false;
-
-        //根据popup页面发出的消息进行回应
-        chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
-          if (request.command == "brush") {
-            this.toggleBrush();
-          }
-          if (request.command == "buttonStatus") {
-            sendResponse({brush: this.brush});
-          }
-        });
     }
 
     /*
@@ -354,23 +341,5 @@ export default class DomOperation {
     	chrome.runtime.sendMessage({command: "createTab", target: url}, (response) => {
     		//console.log(response.result);
     	});
-    }
-
-    /*
-     * 画笔切换动作
-     */
-    toggleBrush() {
-      // 开启画笔
-      if (!this.brush) {
-        // TODO
-        console.debug("open brush");
-        this.brush = true;
-      }
-      // 关闭画笔
-      else {
-        // TODO
-        console.debug("close brush");
-        this.brush = false;
-      }
     }
 }

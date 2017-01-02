@@ -29,10 +29,6 @@ webpackJsonp([0],[
 
 	var _setting2 = _interopRequireDefault(_setting);
 
-	var _DomOperation = __webpack_require__(119);
-
-	var _DomOperation2 = _interopRequireDefault(_DomOperation);
-
 	function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
 	var state = {
@@ -40,6 +36,17 @@ webpackJsonp([0],[
 	};
 
 	var recognizeInstance = null;
+
+	// chrome 事件监听 相关代码
+	//根据popup页面发出的消息进行回应
+	chrome.runtime.onMessage.addListener(function (request, sender, sendResponse) {
+	    if (request.command == "brush") {
+	        recognizeInstance.domToggle();
+	    }
+	    if (request.command == "buttonStatus") {
+	        sendResponse({ brush: recognizeInstance.markingDomState });
+	    }
+	});
 
 	$(document).keydown(function (event) {
 	    console.log(event.keyCode);
@@ -59,7 +66,6 @@ webpackJsonp([0],[
 	        var webConfig = null;
 	        for (var key in _setting2.default) {
 	            var dom = $(_setting2.default[key].identification);
-	            console.log("dom", dom);
 	            if (dom && dom.length === 1) {
 	                // dom 存在
 	                state.webType = key;
@@ -161,6 +167,7 @@ webpackJsonp([0],[
 	            "webConfig": args.webConfig
 	        });
 	        this.domOperation = new _DomOperation2.default();
+	        this.markingDomState = null;
 	        this._history = new Array();
 	        this.webConfig = args.webConfig;
 	        this.config = _config2.default.noteConfig;
@@ -175,8 +182,10 @@ webpackJsonp([0],[
 
 	            this._$recognize = $("<canvas id=\"myCanvas\" class=\"web-recognize-Content\">\n                <span style=\"background-color:#ffff88;\">The &lt;canvas&gt; element is not supported by this browser.</span>\n            </canvas>");
 	            this._canvas = this._$recognize[0];
+
 	            var canvasPath = this.webConfig.listDOMSelector;
 	            $(canvasPath).append(this._$recognize[0]);
+	            this.domToggle(false);
 	            this.onLoadEvent();
 	            $(window).resize(function () {
 	                _this.canvasResize();
@@ -198,11 +207,25 @@ webpackJsonp([0],[
 	        key: "domDetach",
 	        value: function domDetach() {
 	            $(this._canvas).detach();
+	            this.markingDomState = false;
 	        }
 	    }, {
 	        key: "domAttach",
 	        value: function domAttach() {
 	            $(this.webConfig.listDOMSelector).append(this._canvas);
+	            this.markingDomState = true;
+	            this.domToggle(true);
+	        }
+	    }, {
+	        key: "domToggle",
+	        value: function domToggle(value) {
+	            if (value !== undefined) {
+	                $(this._canvas).toggle(value);
+	                this.markingDomState = value;
+	            } else {
+	                $(this._canvas).toggle();
+	                this.markingDomState = !this.markingDomState;
+	            }
 	        }
 	    }, {
 	        key: "canvasResize",
@@ -4538,19 +4561,6 @@ webpackJsonp([0],[
 	    this.SIGN_BLACK = "SIGN_BLACK"; // 大叉
 	    this.TEXT_ADD = "TEXT_ADD"; // 小圈
 	    this.TEXT_REMOVE = "TEXT_REMOVE"; // 小叉
-
-	    // 画布状态
-	    this.brush = false;
-
-	    //根据popup页面发出的消息进行回应
-	    chrome.runtime.onMessage.addListener(function (request, sender, sendResponse) {
-	      if (request.command == "brush") {
-	        _this.toggleBrush();
-	      }
-	      if (request.command == "buttonStatus") {
-	        sendResponse({ brush: _this.brush });
-	      }
-	    });
 	  }
 
 	  /*
@@ -4908,27 +4918,6 @@ webpackJsonp([0],[
 	      chrome.runtime.sendMessage({ command: "createTab", target: url }, function (response) {
 	        //console.log(response.result);
 	      });
-	    }
-
-	    /*
-	     * 画笔切换动作
-	     */
-
-	  }, {
-	    key: "toggleBrush",
-	    value: function toggleBrush() {
-	      // 开启画笔
-	      if (!this.brush) {
-	        // TODO
-	        console.debug("open brush");
-	        this.brush = true;
-	      }
-	      // 关闭画笔
-	      else {
-	          // TODO
-	          console.debug("close brush");
-	          this.brush = false;
-	        }
 	    }
 	  }]);
 	  return DomOperation;

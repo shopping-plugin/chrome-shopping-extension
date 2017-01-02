@@ -1,14 +1,23 @@
-
 import Recognize from "./Recognize";
 import setting from "../setting/setting";
-import DOMOperation from "./DomOperation";
-
 
 const state = {
     "webType": null
 }
 
 let recognizeInstance = null;
+
+// chrome 事件监听 相关代码
+//根据popup页面发出的消息进行回应
+chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
+  if (request.command == "brush") {
+    recognizeInstance.domToggle();
+  }
+  if (request.command == "buttonStatus") {
+    sendResponse({brush: recognizeInstance.markingDomState});
+  }
+});
+
 
 $(document).keydown((event) => {
     console.log(event.keyCode);
@@ -32,7 +41,6 @@ $(document).ready(function() {
         for( let key in setting )
         {
             const dom = $( setting[key].identification );
-            console.log("dom", dom);
             if (dom && dom.length === 1) {
                 // dom 存在
                 state.webType = key;
@@ -51,6 +59,7 @@ $(document).ready(function() {
                 webConfig,
                 state
             });
+
         }
     }, 300);
 });
