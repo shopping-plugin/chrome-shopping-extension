@@ -49,7 +49,6 @@ webpackJsonp([0],[
 	});
 
 	$(document).keydown(function (event) {
-	    console.log(event.keyCode);
 	    if (recognizeInstance) {
 	        if (event.shiftKey && event.ctrlKey && event.keyCode === 77) {
 	            recognizeInstance.domDetach();
@@ -450,8 +449,9 @@ webpackJsonp([0],[
 	                                                        offsetLeftStr = window.getComputedStyle(item.element, null).getPropertyValue('margin-left');
 	                                                        offsetTopStr = window.getComputedStyle(item.element, null).getPropertyValue('margin-top');
 	                                                        range = domItem.range;
-	                                                        offsetX = parentLocation.left - parseInt(offsetLeftStr.substring(0, offsetLeftStr.length - 2));
-	                                                        offsetY = parentLocation.top - parseInt(offsetTopStr.substring(0, offsetTopStr.length - 2));
+	                                                        offsetX = parentLocation.left; //+ parseInt(offsetLeftStr.substring(0, offsetLeftStr.length - 2)));
+
+	                                                        offsetY = parentLocation.top; // + parseInt(offsetTopStr.substring(0, offsetTopStr.length - 2)));
 
 	                                                        range.startX -= offsetX;
 	                                                        range.startY -= offsetY;
@@ -612,14 +612,14 @@ webpackJsonp([0],[
 	    }, {
 	        key: "drawText",
 	        value: function drawText(str) {
-	            var $_g = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : this._g;
+	            // $_g.clearRect(0, 0, this._rc.width, 40);
+	            // $_g.fillStyle = "rgb(255,255,136)";
+	            // $_g.fillRect(0, 0, this._rc.width, 40);
+	            // $_g.font = "40px Arial";
+	            // $_g.fillStyle = "rgb(0,0,255)";
+	            // $_g.fillText(str, 1, 35);
 
-	            $_g.clearRect(0, 0, this._rc.width, 40);
-	            $_g.fillStyle = "rgb(255,255,136)";
-	            $_g.fillRect(0, 0, this._rc.width, 40);
-	            $_g.font = "40px Arial";
-	            $_g.fillStyle = "rgb(0,0,255)";
-	            $_g.fillText(str, 1, 35);
+	            var $_g = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : this._g;
 	        }
 	    }]);
 	    return Recognize;
@@ -5583,10 +5583,11 @@ webpackJsonp([0],[
 	            var _this = this;
 
 	            var scale = 4;
-	            var cloneDom = this.scaleDom(dom, scale);
+	            var largeDom = this.scaleDom(dom, scale);
+	            var cloneDom = largeDom.dom;
+	            var offset = largeDom.offset;
 	            // make sure all text is black
 	            $(cloneDom).children().children(".H").removeClass("H");
-	            document.body.appendChild(cloneDom);
 	            return new Promise(function (resolve, reject) {
 	                _this.domToImage.toPng(cloneDom).then(function (dataUrl) {
 	                    // cloneDom.remove();
@@ -5599,7 +5600,7 @@ webpackJsonp([0],[
 	                            "width": range.width * scale,
 	                            "height": range.height * scale
 	                        });
-	                        resolve(img);
+	                        resolve(result);
 	                    }, 200);
 	                }).catch(function (error) {
 	                    reject(error);
@@ -5642,7 +5643,7 @@ webpackJsonp([0],[
 	            if (!range || !range.startX || !range.startY || !range.width || !range.height) {
 	                console.log("clip range params exists error");
 	            }
-	            var base64 = AlloyImage(dom).clip(parseInt(range.startX), parseInt(range.startY), parseInt(range.width), parseInt(range.height)).replace(dom).save("result.png", 1.0);
+	            var base64 = AlloyImage(dom).clip(parseInt(range.startX), parseInt(range.startY), parseInt(range.width), parseInt(range.height)).save("result.png", 1.0);
 	            var image = new Image();
 	            image.src = base64;
 	            return image;
@@ -5656,17 +5657,29 @@ webpackJsonp([0],[
 	            var paddingRight = this._getDomAttribute(dom, "padding-right") * scale;
 	            var paddingTop = this._getDomAttribute(dom, "padding-top") * scale;
 	            var paddingBottom = this._getDomAttribute(dom, "padding-bottom") * scale;
+	            var marginLeft = this._getDomAttribute(dom, "margin-left") * scale;
+	            var marginTop = this._getDomAttribute(dom, "margin-top") * scale;
+	            var marginRight = this._getDomAttribute(dom, "margin-right") * scale;
+	            var marginBottom = this._getDomAttribute(dom, "margin-bottom") * scale;
 	            var fontSize = this._getDomAttribute(dom, "font-size") * scale;
 	            var padding = paddingTop + " " + paddingRight + " " + paddingBottom + " " + paddingLeft;
+	            var margin = marginTop + " " + marginRight + " " + marginBottom + " " + marginLeft;
 	            var result = dom.cloneNode(true);
 	            $(result).css({
 	                width: width,
 	                height: height,
-	                padding: padding,
+	                "padding-top": paddingTop,
+	                "padding-left": paddingLeft,
+	                "padding-bottom": paddingBottom,
+	                "padding-right": paddingRight,
+	                "margin": 0,
 	                "font-size": fontSize,
 	                "color": "rgb(61, 61, 61)"
 	            });
-	            return result;
+	            return { "dom": result, "offset": {
+	                    "x": paddingLeft * (scale - 1) / scale,
+	                    "y": paddingTop * (scale - 1) / scale
+	                } };
 	        }
 	    }, {
 	        key: "_getDomAttribute",

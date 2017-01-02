@@ -11,10 +11,11 @@ export default class InterceptionWeb {
     domToImageLikePng(dom, range)
     {
         const scale = 4;
-        const cloneDom = this.scaleDom(dom, scale);
+        const largeDom = this.scaleDom(dom, scale);
+        const cloneDom = largeDom.dom;
+        const offset = largeDom.offset;
         // make sure all text is black
         $(cloneDom).children().children(".H").removeClass("H");
-        document.body.appendChild(cloneDom);
         return new Promise((resolve, reject) => {
             this.domToImage.toPng(cloneDom).then((dataUrl) => {
                 // cloneDom.remove();
@@ -27,7 +28,7 @@ export default class InterceptionWeb {
                         "width": range.width * scale,
                         "height": range.height * scale
                     });
-                    resolve(img);
+                    resolve(result);
                 }, 200);
             }).catch((error) => {
                 reject(error);
@@ -70,7 +71,7 @@ export default class InterceptionWeb {
         const base64 = AlloyImage(dom).clip(parseInt(range.startX),
                 parseInt(range.startY),
                 parseInt(range.width),
-                parseInt(range.height)).replace(dom).save("result.png", 1.0);
+                parseInt(range.height)).save("result.png", 1.0);
         let image = new Image();
         image.src = base64;
         return image;
@@ -84,17 +85,29 @@ export default class InterceptionWeb {
         const paddingRight = this._getDomAttribute(dom, "padding-right") * scale;
         const paddingTop = this._getDomAttribute(dom, "padding-top") * scale;
         const paddingBottom = this._getDomAttribute(dom, "padding-bottom") * scale;
+        const marginLeft = this._getDomAttribute(dom, "margin-left") * scale;
+        const marginTop = this._getDomAttribute(dom, "margin-top") * scale;
+        const marginRight = this._getDomAttribute(dom, "margin-right") * scale;
+        const marginBottom = this._getDomAttribute(dom, "margin-bottom") * scale;
         const fontSize = this._getDomAttribute(dom, "font-size") * scale;
         const padding = paddingTop + " " + paddingRight + " " + paddingBottom + " " + paddingLeft;
+        const margin = marginTop + " " + marginRight + " " + marginBottom + " " + marginLeft;
         const result = dom.cloneNode(true);
         $(result).css({
             width,
             height,
-            padding,
+            "padding-top": paddingTop,
+            "padding-left": paddingLeft,
+            "padding-bottom": paddingBottom,
+            "padding-right": paddingRight,
+            "margin": 0,
             "font-size": fontSize,
             "color": "rgb(61, 61, 61)"
         });
-        return result;
+        return {"dom": result, "offset": {
+            "x": (paddingLeft) * (scale - 1) / scale,
+            "y": (paddingTop) * (scale - 1) / scale
+        }};
     }
     _getDomAttribute(dom, name)
     {

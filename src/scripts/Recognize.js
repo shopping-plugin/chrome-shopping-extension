@@ -248,8 +248,8 @@ export default class Recognize
             const offsetLeftStr = window.getComputedStyle(item.element, null).getPropertyValue('margin-left');
             const offsetTopStr = window.getComputedStyle(item.element, null).getPropertyValue('margin-top');
             const range = domItem.range;
-            const offsetX = (parentLocation.left - parseInt(offsetLeftStr.substring(0, offsetLeftStr.length - 2)));
-            const offsetY = (parentLocation.top - parseInt(offsetTopStr.substring(0, offsetTopStr.length - 2)));
+            const offsetX = parentLocation.left; //+ parseInt(offsetLeftStr.substring(0, offsetLeftStr.length - 2)));
+            const offsetY = parentLocation.top; // + parseInt(offsetTopStr.substring(0, offsetTopStr.length - 2)));
             range.startX -= offsetX;
             range.startY -= offsetY;
             range.width = (range.startX < 0 ? range.width + range.startX : range.width);
@@ -353,11 +353,11 @@ export default class Recognize
 
     drawText(str, $_g = this._g)
     {
-        $_g.clearRect(0, 0, this._rc.width, 40);
-        $_g.fillStyle = "rgb(255,255,136)";
-        $_g.fillRect(0, 0, this._rc.width, 40);
-        $_g.font = "40px Arial";
-        $_g.fillStyle = "rgb(0,0,255)";
-        $_g.fillText(str, 1, 35);
+        // $_g.clearRect(0, 0, this._rc.width, 40);
+        // $_g.fillStyle = "rgb(255,255,136)";
+        // $_g.fillRect(0, 0, this._rc.width, 40);
+        // $_g.font = "40px Arial";
+        // $_g.fillStyle = "rgb(0,0,255)";
+        // $_g.fillText(str, 1, 35);
     }
 }

@@ -20,7 +20,6 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
 
 
 $(document).keydown((event) => {
-    console.log(event.keyCode);
     if (recognizeInstance)
     {
         if (event.shiftKey && event.ctrlKey && event.keyCode === 77)
