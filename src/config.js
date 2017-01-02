@@ -26,7 +26,7 @@ export default {
             "30": "up",
             "40": "down",
             "50": "|__|",
-            "60": "abs |__|"
+            "60": "abs|__|"
         },
         "diff": {
             "minRadius": 36,

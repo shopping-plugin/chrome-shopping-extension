@@ -452,7 +452,7 @@ webpackJsonp([0],[
 	                                                            "rootDom": item.rootElement,
 	                                                            "titleDom": item.element,
 	                                                            "type": domItem.shape,
-	                                                            "title": extractText
+	                                                            "title": extractText.text
 	                                                        });
 
 	                                                    case 18:
@@ -542,6 +542,13 @@ webpackJsonp([0],[
 	            if (!data || data.length < 1) {
 	                return false;
 	            }
+	            var typeList = data.map(function (item) {
+	                return item.type.includes("abs") ? "-" : "+";
+	            });
+	            var wordList = data.map(function (item) {
+	                return item.title;
+	            });
+	            this.domOperation.filterText(wordList, typeList);
 	        }
 	    }, {
 	        key: "labelExtract",
@@ -4471,7 +4478,7 @@ webpackJsonp([0],[
 	            "30": "up",
 	            "40": "down",
 	            "50": "|__|",
-	            "60": "abs |__|"
+	            "60": "abs|__|"
 	        },
 	        "diff": {
 	            "minRadius": 36,
@@ -5205,7 +5212,7 @@ webpackJsonp([0],[
 					"spec": ">=1.0.10 <2.0.0",
 					"type": "range"
 				},
-				"/Users/yef/codes/chrome-plugin/chrome-shopping-extension"
+				"/Users/i330558/Desktop/chrome-shopping-extension"
 			]
 		],
 		"_from": "tesseract.js@>=1.0.10 <2.0.0",
@@ -5239,7 +5246,7 @@ webpackJsonp([0],[
 		"_shasum": "e11a96ae76147939d9218f88e287fb69414b1e5d",
 		"_shrinkwrap": null,
 		"_spec": "tesseract.js@^1.0.10",
-		"_where": "/Users/yef/codes/chrome-plugin/chrome-shopping-extension",
+		"_where": "/Users/i330558/Desktop/chrome-shopping-extension",
 		"author": "",
 		"browser": {
 			"./src/node/index.js": "./src/browser/index.js"

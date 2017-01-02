@@ -248,7 +248,7 @@ export default class Recognize
                 "rootDom": item.rootElement,
                 "titleDom": item.element,
                 "type": domItem.shape,
-                "title": extractText
+                "title": extractText.text
             };
         }));
 
@@ -289,6 +289,11 @@ export default class Recognize
         {
             return false;
         }
+        const typeList = data.map(item => {
+            return (item.type.includes("abs") ? "-" : "+");
+        });
+        const wordList = data.map(item => item.title);
+        this.domOperation.filterText(wordList, typeList);
     }
 
     labelExtract(item, range)
