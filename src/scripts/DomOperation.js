@@ -3,7 +3,6 @@ export default class DomOperation {
     {
         this.GRID_STYLE = "GRID";
         this.LIST_STYLE = "LIST";
-        this.product_list = "";
 
         this.next_page_dom_list = "";
         this.item_index = 0;
@@ -14,26 +13,29 @@ export default class DomOperation {
         setTimeout(() => {
           this.initNextPageData();
           this.getNextPage();
-        }, 3000);
+        }, 1000);
 
-        // 存储过往操作的黑白名单，在填补空白时对product_list中的商品进行过滤
+        // 存储过往操作的黑白名单，在填补空白时对商品进行过滤
         this.WHITE_LIST = [];
         this.BLACK_LIST = [];
 
         // 不同的笔迹类型
         this.SIGN_WHITE = "SIGN_WHITE";	// 大圈
         this.SIGN_BLACK = "SIGN_BLACK";	// 大叉
-        this.TEXT_ADD = "TEXT_ADD"; // 小圈
-        this.TEXT_REMOVE = "TEXT_REMOVE"; // 小叉
     }
 
     /*
      * 根据当前页数初始化下一页数据
-     * 包括下一页的页数，下一页的URL，以及页大小
+     * 包括下一页的页数，下一页的URL
      */
     initNextPageData() {
       let next_page = $('ul.items li.item.active').next();
       let a = next_page.children();
+
+      if (a == undefined || a == null) {
+        return;
+      }
+
       this.next_page_count = a[0].innerText;
       this.next_page_url = this.getNextPageURL();
 
@@ -114,12 +116,15 @@ export default class DomOperation {
       console.debug(wordList, typeList);
 
       for (let i = 0; i < wordList.length; i++) {
+        this.nlp(wordList[i]);
+
         let keyword = "+";
-        if (typeList[i] == this.TEXT_REMOVE) {
+
+        if (typeList[i] == "-") {
           keyword += "-";
         }
-
         keyword += encodeURI(wordList[i]);
+
         q_para += keyword;
       }
 
@@ -157,7 +162,9 @@ export default class DomOperation {
     				$('#' + cur_id).remove();
     				this.BLACK_LIST.push(cur_id);
 
-    				this.fillInBlank(page_style);
+    				if (this.next_page_dom_list != "") {
+              this.fillInBlank(page_style);
+            }
     			}
     		}
     		// 将白名单内商品排列到最前
@@ -340,6 +347,15 @@ export default class DomOperation {
     createTab(url) {
     	chrome.runtime.sendMessage({command: "createTab", target: url}, (response) => {
     		//console.log(response.result);
+    	});
+    }
+
+    /*
+     * 与background页面通信，调用淘宝API对圈中的关键字进行分词
+     */
+    nlp(word) {
+      chrome.runtime.sendMessage({command: "nlp", word: word}, (response) => {
+    		// console.log(response.result);
     	});
     }
 }

@@ -4539,7 +4539,6 @@ webpackJsonp([0],[
 
 	    this.GRID_STYLE = "GRID";
 	    this.LIST_STYLE = "LIST";
-	    this.product_list = "";
 
 	    this.next_page_dom_list = "";
 	    this.item_index = 0;
@@ -4550,22 +4549,20 @@ webpackJsonp([0],[
 	    setTimeout(function () {
 	      _this.initNextPageData();
 	      _this.getNextPage();
-	    }, 3000);
+	    }, 1000);
 
-	    // 存储过往操作的黑白名单，在填补空白时对product_list中的商品进行过滤
+	    // 存储过往操作的黑白名单，在填补空白时对商品进行过滤
 	    this.WHITE_LIST = [];
 	    this.BLACK_LIST = [];
 
 	    // 不同的笔迹类型
 	    this.SIGN_WHITE = "SIGN_WHITE"; // 大圈
 	    this.SIGN_BLACK = "SIGN_BLACK"; // 大叉
-	    this.TEXT_ADD = "TEXT_ADD"; // 小圈
-	    this.TEXT_REMOVE = "TEXT_REMOVE"; // 小叉
 	  }
 
 	  /*
 	   * 根据当前页数初始化下一页数据
-	   * 包括下一页的页数，下一页的URL，以及页大小
+	   * 包括下一页的页数，下一页的URL
 	   */
 
 
@@ -4574,6 +4571,11 @@ webpackJsonp([0],[
 	    value: function initNextPageData() {
 	      var next_page = $('ul.items li.item.active').next();
 	      var a = next_page.children();
+
+	      if (a == undefined || a == null) {
+	        return;
+	      }
+
 	      this.next_page_count = a[0].innerText;
 	      this.next_page_url = this.getNextPageURL();
 
@@ -4663,12 +4665,15 @@ webpackJsonp([0],[
 	      console.debug(wordList, typeList);
 
 	      for (var i = 0; i < wordList.length; i++) {
+	        this.nlp(wordList[i]);
+
 	        var keyword = "+";
-	        if (typeList[i] == this.TEXT_REMOVE) {
+
+	        if (typeList[i] == "-") {
 	          keyword += "-";
 	        }
-
 	        keyword += encodeURI(wordList[i]);
+
 	        q_para += keyword;
 	      }
 
@@ -4708,7 +4713,9 @@ webpackJsonp([0],[
 	            $('#' + cur_id).remove();
 	            this.BLACK_LIST.push(cur_id);
 
-	            this.fillInBlank(page_style);
+	            if (this.next_page_dom_list != "") {
+	              this.fillInBlank(page_style);
+	            }
 	          }
 	        }
 	        // 将白名单内商品排列到最前
@@ -4917,6 +4924,18 @@ webpackJsonp([0],[
 	    value: function createTab(url) {
 	      chrome.runtime.sendMessage({ command: "createTab", target: url }, function (response) {
 	        //console.log(response.result);
+	      });
+	    }
+
+	    /*
+	     * 与background页面通信，调用淘宝API对圈中的关键字进行分词
+	     */
+
+	  }, {
+	    key: "nlp",
+	    value: function nlp(word) {
+	      chrome.runtime.sendMessage({ command: "nlp", word: word }, function (response) {
+	        // console.log(response.result);
 	      });
 	    }
 	  }]);
@@ -5201,7 +5220,7 @@ webpackJsonp([0],[
 					"spec": ">=1.0.10 <2.0.0",
 					"type": "range"
 				},
-				"/Users/i330558/Desktop/chrome-shopping-extension"
+				"/Users/yef/codes/chrome-plugin/chrome-shopping-extension"
 			]
 		],
 		"_from": "tesseract.js@>=1.0.10 <2.0.0",
@@ -5235,7 +5254,7 @@ webpackJsonp([0],[
 		"_shasum": "e11a96ae76147939d9218f88e287fb69414b1e5d",
 		"_shrinkwrap": null,
 		"_spec": "tesseract.js@^1.0.10",
-		"_where": "/Users/i330558/Desktop/chrome-shopping-extension",
+		"_where": "/Users/yef/codes/chrome-plugin/chrome-shopping-extension",
 		"author": "",
 		"browser": {
 			"./src/node/index.js": "./src/browser/index.js"
