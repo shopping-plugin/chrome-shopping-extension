@@ -6,11 +6,12 @@ export default class DomOperation {
 
         this.next_page_dom_list = "";
         this.item_index = 0;
-        this.page_size = 44;
+        this.data_value = 44;
         this.next_page_count = 0;
         this.next_page_url = "";
 
         setTimeout(() => {
+          this.cur_page_url = $(document)[0].URL;
           this.initNextPageData();
           this.getNextPage();
         }, 1000);
@@ -22,6 +23,19 @@ export default class DomOperation {
         // 不同的笔迹类型
         this.SIGN_WHITE = "SIGN_WHITE";	// 大圈
         this.SIGN_BLACK = "SIGN_BLACK";	// 大叉
+
+        this.nlp_result = "";
+
+        // 接收background发送过来的分词结果
+        chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
+          if (request.command == "nlp_result") {
+            console.debug(request.result);
+
+            if (!request.result.nlp_word_response == undefined) {
+              this.nlp_result = request.result.nlp_word_response.wordresult;
+            }
+          }
+        });
     }
 
     /*
@@ -32,15 +46,8 @@ export default class DomOperation {
       let next_page = $('ul.items li.item.active').next();
       let a = next_page.children();
 
-      if (a == undefined || a == null) {
-        return;
-      }
-
       this.next_page_count = a[0].innerText;
       this.next_page_url = this.getNextPageURL();
-
-      //console.debug("next_page_count: " + this.next_page_count);
-      //console.debug("page_size: " + this.page_size);
 
       let iframe_div = document.createElement('div');
       iframe_div.id = "iframe_div";
@@ -52,10 +59,10 @@ export default class DomOperation {
      * 得到待获取的下一页面的URL
      */
     getNextPageURL() {
-      let cur_url = $(document)[0].URL;
+      let cur_url = this.cur_page_url;
       let s_para = cur_url.match(/&s=([^& ]*)/);
 
-      let s_value = this.page_size * (this.next_page_count - 1);
+      let s_value = this.data_value * (this.next_page_count - 1);
       if (s_para == null) {
         return cur_url + "&s=" + s_value;
       }
@@ -72,7 +79,7 @@ export default class DomOperation {
         $('#next_page_iframe').remove();
       }
 
-      //console.debug("next_url: ", this.next_page_url);
+      this.next_page_dom_list = "";
 
       let iframe = document.createElement('iframe');
       iframe.id = "next_page_iframe";
@@ -86,7 +93,7 @@ export default class DomOperation {
 
         iframe_window.find('html body').animate({
           scrollTop: $(iframe_window).height()
-        }, 3000, () => {
+        }, 2000, () => {
           // Animation complete
           let item_list;
           if (this.getPageStyle() == this.GRID_STYLE) {
@@ -100,8 +107,6 @@ export default class DomOperation {
           this.item_index = 0;
           this.next_page_count++;
           this.next_page_url = this.getNextPageURL();
-
-          //console.debug("item_list", this.next_page_dom_list);
         });
       }, 3000);
     }
@@ -110,29 +115,173 @@ export default class DomOperation {
      * 供笔迹识别部分调用的接口 - 关键字过滤
      */
     filterText(wordList, typeList) {
-      let cur_url = $(document)[0].URL;
+      this.nlp_result = "";
+
+      // 进行分词
+      let wordStr = wordList.join("-");
+      this.nlp(wordStr);
+
+      setTimeout(() => {
+        // 未获取到分词结果或分词失败，则使用未分词的word进行过滤
+        if (this.nlp_result == "" || this.nlp_result.top_status == false) {
+          this.filterKeyword(wordList, typeList, false);
+        }
+        // 使用分词结果过滤
+        else {
+          wordList = this.nlp_result.top_result.split("-");
+          this.filterKeyword(wordList, typeList, true);
+        }
+      }, 1000);
+    }
+
+    /*
+     * 对分词过后的关键字进行处理
+     */
+    filterKeyword(wordList, typeList, isNLP) {
+      let filter_url = this.getFilterURL(wordList, typeList, isNLP);
+      this.loadFilterPage(filter_url);
+    }
+
+    /*
+     * 根据小圈小叉结果构造新的URL
+     */
+    getFilterURL(wordList, typeList, isNLP) {
+      let cur_url = this.cur_page_url;
       let q_para = cur_url.match(/[&?]q=([^& ]*)/)[0];
 
-      console.debug(wordList, typeList);
-
       for (let i = 0; i < wordList.length; i++) {
-        this.nlp(wordList[i]);
+        let keyword = "";
 
-        let keyword = "+";
+        if (isNLP) {
+          let nlp_array = wordList[i].split("\t");
+          for (let j = 0; j < nlp_array.length; j++) {
+            if (nlp_array[j] == "") {
+              continue;
+            }
 
-        if (typeList[i] == "-") {
-          keyword += "-";
+            keyword += "+";
+
+            if (typeList[i] == "-") {
+              keyword += "-";
+            }
+
+            keyword += encodeURI(nlp_array[j]);
+          }
         }
-        keyword += encodeURI(wordList[i]);
+        else {
+          keyword += "+";
+          if (typeList[i] == "-") {
+            keyword += "-";
+          }
+          keyword += encodeURI(wordList[i]);
+        }
 
         q_para += keyword;
       }
 
       let new_url = cur_url.replace(/[&?]q=([^& ]*)/, q_para);
-      //console.debug("new_url: " + new_url);
 
-      // TODO 根据过滤后的搜索关键字新开标签页
-      this.createTab(new_url);
+      return new_url;
+    }
+
+    /*
+     * 根据构造出的URL加载增加关键字后的新页面内容
+     */
+    loadFilterPage(filter_url) {
+      if ($('#filter_page_iframe').length != 0) {
+        $('#filter_page_iframe').remove();
+      }
+
+      let iframe = document.createElement('iframe');
+      iframe.id = "filter_page_iframe";
+      iframe.name = "filter_page_iframe"
+      iframe.src = filter_url;
+      iframe.width = $(document).width();
+      $('#iframe_div').append(iframe);
+
+      setTimeout(() => {
+        this.replaceDom();
+        this.cur_page_url = filter_url;
+
+        this.next_page_count = 2;
+        this.next_page_url = this.getNextPageURL();
+        this.getNextPage();
+      }, 3000);
+    }
+
+    /*
+     * 根据重新过滤得到的结果替换当前页面商品
+     * 保留白名单
+     */
+    replaceDom() {
+      let iframe_window = $(window.frames["filter_page_iframe"].document);
+
+      iframe_window.find('html body').animate({
+        scrollTop: $(iframe_window).height()
+      }, 3000, () => {
+        let new_item_list;
+        let page_style = this.getPageStyle();
+
+        if (page_style == this.GRID_STYLE) {
+          $(".item.activity.activity-tpl-theme").remove();
+          new_item_list = iframe_window.find("div.grid.g-clearfix").children().eq(0).children();
+
+          let prev_item_list = $('div.item.J_MouserOnverReq');
+          for (let i = 0; i < prev_item_list.length; i++) {
+            let item = prev_item_list.eq(i);
+            // 跳过白名单商品
+            if (!item.hasClass("white")) {
+              item.remove();
+            }
+          }
+
+          for (let i = 0; i < new_item_list.length; i++) {
+            let new_item = new_item_list.eq(i);
+            let new_item_id = this.getProductIdFromDom(new_item);
+            if (!this.checkProduct(new_item_id)) {
+              continue;
+            }
+
+            let last_item = this.getLastProduct(page_style);
+
+            if (last_item.length == 0) {
+              $('div.grid.g-clearfix').children().eq(0).append(new_item);
+            }
+            else {
+              last_item.after(new_item);
+            }
+          }
+        }
+        else {
+          new_item_list = iframe_window.find("div.items.g-clearfix").children();
+
+          let prev_item_list = $('div.item.g-clearfix');
+          for (let i = 0; i < prev_item_list.length; i++) {
+            let item = prev_item_list.eq(i);
+            // 跳过白名单商品
+            if (!item.hasClass("white")) {
+              item.remove();
+            }
+          }
+
+          for (let i = 0; i < new_item_list.length; i++) {
+            let new_item = new_item_list.eq(i);
+            let new_item_id = this.getProductIdFromDom(new_item);
+            if (!this.checkProduct(new_item_id)) {
+              continue;
+            }
+
+            let last_item = this.getLastProduct(page_style);
+
+            if (last_item.length == 0) {
+              $('div.items.g-clearfix').append(new_item);
+            }
+            else {
+              last_item.after(new_item);
+            }
+          }
+        }
+      });
     }
 
     /*
@@ -142,7 +291,6 @@ export default class DomOperation {
      */
     filterDom(containerDivList, imgDivList, typeList) {
     	let page_style = this.getPageStyle();
-      //console.debug(containerDivList, imgDivList, typeList);
 
     	for (let i = 0; i < containerDivList.length; i++) {
     		let cur_item = containerDivList[i];
@@ -150,7 +298,6 @@ export default class DomOperation {
     		let cur_type = typeList[i];
 
     		let cur_id = this.getProductIdFromImg(cur_img);
-        //console.debug("cur_id: " + cur_id);
     		if (cur_id == "")
     			continue;
 
@@ -204,6 +351,7 @@ export default class DomOperation {
     updateItem(item, p_id) {
     	item.id = p_id;
     	item.style.backgroundColor = "#FFCCCC";
+      item.className += " white";
     }
 
     /*
@@ -223,7 +371,7 @@ export default class DomOperation {
     getNewProduct(page_style) {
       while (true) {
         // 下一页商品用完，继续获取下下页商品
-        if (this.item_index == this.page_size) {
+        if (this.item_index == this.next_page_dom_list.length) {
           this.getNextPage();
           setTimeout(() => {
             this.fillInBlank(page_style);
@@ -232,10 +380,8 @@ export default class DomOperation {
           break;
         }
         else {
-          //console.debug("item index: " + this.item_index);
           let product = this.next_page_dom_list.eq(this.item_index);
           this.item_index++;
-      		//console.debug("product", product);
 
           // 检测是否为商品
           if (page_style == this.GRID_STYLE && !product.hasClass("item J_MouserOnverReq")) {
@@ -355,7 +501,7 @@ export default class DomOperation {
      */
     nlp(word) {
       chrome.runtime.sendMessage({command: "nlp", word: word}, (response) => {
-    		// console.log(response.result);
+
     	});
     }
 }

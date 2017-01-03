@@ -16,6 +16,8 @@ chrome.runtime.onMessage.addListener(function(request, sender, sendResponse) {
  * 调用淘宝中文分词服务
  */
 function getNLPResult(word) {
+  console.debug(word);
+
   var xhr = new XMLHttpRequest();
 	var query_str = "http://gw.api.taobao.com/router/rest?";
 	query_str += getNLPParaStr(word);
@@ -26,15 +28,14 @@ function getNLPResult(word) {
 
 	xhr.onreadystatechange = function() {
 		if (xhr.readyState == 4) {
-			result = xhr.responseText;
-			console.debug(result);
+			var result = $.parseJSON(xhr.responseText);
 
 			// 将异步获取的分词结果传给contentScript
-			// chrome.tabs.query({active: true, currentWindow: true}, function(tabs) {
-			// 	chrome.tabs.sendMessage(tabs[0].id, {command: "product_list", list: product_list}, function(response) {
-			// 		//console.log(response.farewell);
-			// 	});
-			// });
+			chrome.tabs.query({active: true, currentWindow: true}, function(tabs) {
+				chrome.tabs.sendMessage(tabs[0].id, {command: "nlp_result", result: result}, function(response) {
+					//console.log(response.farewell);
+				});
+			});
 		}
 	}
 }
@@ -54,7 +55,7 @@ function getNLPParaStr(word) {
 	para_map["v"] = "2.0";
   // request para
   para_map["w_type"] = 1;
-  para_map["text"] = "{id: 123, content: " + word + ", type: 1}";
+  para_map["text"] = "{id: 123, content: '" + word + "', type: 1}";
 
   var sorted_map = sortMap(para_map);
   var query = concatPara(sorted_map);
