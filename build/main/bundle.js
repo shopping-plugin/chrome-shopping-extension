@@ -4693,7 +4693,8 @@ webpackJsonp([0],[
 	    key: "filterKeyword",
 	    value: function filterKeyword(wordList, typeList, isNLP) {
 	      var filter_url = this.getFilterURL(wordList, typeList, isNLP);
-	      this.loadFilterPage(filter_url);
+	      this.createTab(filter_url);
+	      //this.loadFilterPage(filter_url);
 	    }
 
 	    /*
@@ -5765,9 +5766,10 @@ webpackJsonp([0],[
 	            var offset = largeDom.offset;
 	            // make sure all text is black
 	            $(cloneDom).children().children(".H").removeClass("H");
+	            document.body.appendChild(cloneDom);
 	            return new Promise(function (resolve, reject) {
 	                _this.domToImage.toPng(cloneDom).then(function (dataUrl) {
-	                    // cloneDom.remove();
+	                    cloneDom.remove();
 	                    var img = new Image();
 	                    img.src = dataUrl;
 	                    setTimeout(function () {

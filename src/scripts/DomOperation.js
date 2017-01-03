@@ -139,7 +139,8 @@ export default class DomOperation {
      */
     filterKeyword(wordList, typeList, isNLP) {
       let filter_url = this.getFilterURL(wordList, typeList, isNLP);
-      this.loadFilterPage(filter_url);
+      this.createTab(filter_url);
+      //this.loadFilterPage(filter_url);
     }
 
     /*
