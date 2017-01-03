@@ -5593,7 +5593,8 @@ webpackJsonp([0],[
 	                    // cloneDom.remove();
 	                    var img = new Image();
 	                    img.src = dataUrl;
-	                    setTimeout(function () {
+	                    console.log(img.complete);
+	                    if (img.complete) {
 	                        var result = _this.clip(img, {
 	                            "startX": range.startX * scale,
 	                            "startY": range.startY * scale,
@@ -5601,7 +5602,18 @@ webpackJsonp([0],[
 	                            "height": range.height * scale
 	                        });
 	                        resolve(result);
-	                    }, 200);
+	                    } else {
+	                        img.onload = function () {
+	                            var result = _this.clip(img, {
+	                                "startX": range.startX * scale,
+	                                "startY": range.startY * scale,
+	                                "width": range.width * scale,
+	                                "height": range.height * scale
+	                            });
+	                            resolve(result);
+	                        };
+	                    }
+	                    setTimeout(function () {}, 200);
 	                }).catch(function (error) {
 	                    reject(error);
 	                });

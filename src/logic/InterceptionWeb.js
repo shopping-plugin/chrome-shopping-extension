@@ -21,7 +21,9 @@ export default class InterceptionWeb {
                 // cloneDom.remove();
                 let img = new Image();
                 img.src = dataUrl;
-                setTimeout(() => {
+                console.log(img.complete);
+                if (img.complete)
+                {
                     const result = this.clip(img, {
                         "startX": range.startX * scale,
                         "startY": range.startY * scale,
@@ -29,6 +31,21 @@ export default class InterceptionWeb {
                         "height": range.height * scale
                     });
                     resolve(result);
+                }
+                else
+                {
+                    img.onload = () => {
+                        const result = this.clip(img, {
+                            "startX": range.startX * scale,
+                            "startY": range.startY * scale,
+                            "width": range.width * scale,
+                            "height": range.height * scale
+                        });
+                        resolve(result);
+                    };
+                }
+                setTimeout(() => {
+
                 }, 200);
             }).catch((error) => {
                 reject(error);
