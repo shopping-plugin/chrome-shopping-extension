@@ -4716,7 +4716,7 @@ webpackJsonp([0],[
 	        if (isNLP) {
 	          var nlp_array = wordList[i].split("\t");
 	          for (var j = 0; j < nlp_array.length; j++) {
-	            if (nlp_array[j] == "") {
+	            if (nlp_array[j].replace(/(^\s*)|(\s*$)/g, "").length == 0) {
 	              continue;
 	            }
 

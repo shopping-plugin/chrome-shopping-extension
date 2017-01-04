@@ -159,7 +159,7 @@ export default class DomOperation {
         if (isNLP) {
           let nlp_array = wordList[i].split("\t");
           for (let j = 0; j < nlp_array.length; j++) {
-            if (nlp_array[j] == "") {
+            if (nlp_array[j].replace(/(^\s*)|(\s*$)/g, "").length == 0) {
               continue;
             }
 
