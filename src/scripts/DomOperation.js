@@ -31,9 +31,11 @@ export default class DomOperation {
           if (request.command == "nlp_result") {
             console.debug(request.result);
 
-            if (!request.result.nlp_word_response == undefined) {
+            if (request.result.nlp_word_response != undefined) {
               this.nlp_result = request.result.nlp_word_response.wordresult;
             }
+
+            console.debug(this.nlp_result);
           }
         });
     }
@@ -79,8 +81,6 @@ export default class DomOperation {
         $('#next_page_iframe').remove();
       }
 
-      this.next_page_dom_list = "";
-
       let iframe = document.createElement('iframe');
       iframe.id = "next_page_iframe";
       iframe.name = "next_page_iframe"
@@ -93,7 +93,7 @@ export default class DomOperation {
 
         iframe_window.find('html body').animate({
           scrollTop: $(iframe_window).height()
-        }, 2000, () => {
+        }, 3000, () => {
           // Animation complete
           let item_list;
           if (this.getPageStyle() == this.GRID_STYLE) {
@@ -107,6 +107,8 @@ export default class DomOperation {
           this.item_index = 0;
           this.next_page_count++;
           this.next_page_url = this.getNextPageURL();
+
+          //console.debug(this.next_page_dom_list);
         });
       }, 3000);
     }
@@ -131,7 +133,7 @@ export default class DomOperation {
           wordList = this.nlp_result.top_result.split("-");
           this.filterKeyword(wordList, typeList, true);
         }
-      }, 1000);
+      }, 3000);
     }
 
     /*
@@ -139,6 +141,7 @@ export default class DomOperation {
      */
     filterKeyword(wordList, typeList, isNLP) {
       let filter_url = this.getFilterURL(wordList, typeList, isNLP);
+      console.debug(wordList, typeList, isNLP);
       this.createTab(filter_url);
       //this.loadFilterPage(filter_url);
     }
@@ -183,106 +186,6 @@ export default class DomOperation {
       let new_url = cur_url.replace(/[&?]q=([^& ]*)/, q_para);
 
       return new_url;
-    }
-
-    /*
-     * 根据构造出的URL加载增加关键字后的新页面内容
-     */
-    loadFilterPage(filter_url) {
-      if ($('#filter_page_iframe').length != 0) {
-        $('#filter_page_iframe').remove();
-      }
-
-      let iframe = document.createElement('iframe');
-      iframe.id = "filter_page_iframe";
-      iframe.name = "filter_page_iframe"
-      iframe.src = filter_url;
-      iframe.width = $(document).width();
-      $('#iframe_div').append(iframe);
-
-      setTimeout(() => {
-        this.replaceDom();
-        this.cur_page_url = filter_url;
-
-        this.next_page_count = 2;
-        this.next_page_url = this.getNextPageURL();
-        this.getNextPage();
-      }, 3000);
-    }
-
-    /*
-     * 根据重新过滤得到的结果替换当前页面商品
-     * 保留白名单
-     */
-    replaceDom() {
-      let iframe_window = $(window.frames["filter_page_iframe"].document);
-
-      iframe_window.find('html body').animate({
-        scrollTop: $(iframe_window).height()
-      }, 3000, () => {
-        let new_item_list;
-        let page_style = this.getPageStyle();
-
-        if (page_style == this.GRID_STYLE) {
-          $(".item.activity.activity-tpl-theme").remove();
-          new_item_list = iframe_window.find("div.grid.g-clearfix").children().eq(0).children();
-
-          let prev_item_list = $('div.item.J_MouserOnverReq');
-          for (let i = 0; i < prev_item_list.length; i++) {
-            let item = prev_item_list.eq(i);
-            // 跳过白名单商品
-            if (!item.hasClass("white")) {
-              item.remove();
-            }
-          }
-
-          for (let i = 0; i < new_item_list.length; i++) {
-            let new_item = new_item_list.eq(i);
-            let new_item_id = this.getProductIdFromDom(new_item);
-            if (!this.checkProduct(new_item_id)) {
-              continue;
-            }
-
-            let last_item = this.getLastProduct(page_style);
-
-            if (last_item.length == 0) {
-              $('div.grid.g-clearfix').children().eq(0).append(new_item);
-            }
-            else {
-              last_item.after(new_item);
-            }
-          }
-        }
-        else {
-          new_item_list = iframe_window.find("div.items.g-clearfix").children();
-
-          let prev_item_list = $('div.item.g-clearfix');
-          for (let i = 0; i < prev_item_list.length; i++) {
-            let item = prev_item_list.eq(i);
-            // 跳过白名单商品
-            if (!item.hasClass("white")) {
-              item.remove();
-            }
-          }
-
-          for (let i = 0; i < new_item_list.length; i++) {
-            let new_item = new_item_list.eq(i);
-            let new_item_id = this.getProductIdFromDom(new_item);
-            if (!this.checkProduct(new_item_id)) {
-              continue;
-            }
-
-            let last_item = this.getLastProduct(page_style);
-
-            if (last_item.length == 0) {
-              $('div.items.g-clearfix').append(new_item);
-            }
-            else {
-              last_item.after(new_item);
-            }
-          }
-        }
-      });
     }
 
     /*
@@ -376,7 +279,7 @@ export default class DomOperation {
           this.getNextPage();
           setTimeout(() => {
             this.fillInBlank(page_style);
-          }, 5000);
+          }, 6000);
 
           break;
         }
