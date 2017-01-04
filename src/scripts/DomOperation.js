@@ -10,9 +10,12 @@ export default class DomOperation {
         this.next_page_count = 0;
         this.next_page_url = "";
 
+        this.KEYWORD_LIST = [];
+        this.KEYWORD_TYPE_LIST = [];
+
         setTimeout(() => {
           this.cur_page_url = $(document)[0].URL;
-          this.initNextPageData();
+          this.initPageData();
           this.getNextPage();
         }, 1000);
 
@@ -37,6 +40,12 @@ export default class DomOperation {
 
             console.debug(this.nlp_result);
           }
+          if (request.command == "keyword") {
+            // console.debug(this.KEYWORD_LIST);
+            // console.debug(this.KEYWORD_TYPE_LIST);
+
+            sendResponse({wordList: this.KEYWORD_LIST, typeList: this.KEYWORD_TYPE_LIST, cur_url: this.cur_page_url});
+          }
         });
     }
 
@@ -44,7 +53,21 @@ export default class DomOperation {
      * 根据当前页数初始化下一页数据
      * 包括下一页的页数，下一页的URL
      */
-    initNextPageData() {
+    initPageData() {
+      let q = this.cur_page_url.match(/[&?]q=([^& ]*)/)[1];
+      let q_array = this.getCharFromUtf8(q).split("+");
+
+      for (let i = 0; i < q_array.length; i++) {
+        this.KEYWORD_LIST.push(q_array[i]);
+
+        if (q_array[i].indexOf("-") == -1) {
+          this.KEYWORD_TYPE_LIST.push("+");
+        }
+        else {
+          this.KEYWORD_TYPE_LIST.push("-");
+        }
+      }
+
       let next_page = $('ul.items li.item.active').next();
       let a = next_page.children();
 
@@ -158,7 +181,9 @@ export default class DomOperation {
         if (isNLP) {
           let nlp_array = wordList[i].split("\t");
           for (let j = 0; j < nlp_array.length; j++) {
-            if (nlp_array[j].replace(/(^\s*)|(\s*$)/g, "").length == 0) {
+            let nlp_word = nlp_array[j].replace(/(^\s*)|(\s*$)/g, "");
+
+            if (nlp_word.length == 0) {
               continue;
             }
 
@@ -166,17 +191,37 @@ export default class DomOperation {
 
             if (typeList[i] == "-") {
               keyword += "-";
+              this.KEYWORD_LIST.push("-" + nlp_word);
+            }
+            else {
+              this.KEYWORD_LIST.push(nlp_word);
             }
 
-            keyword += encodeURI(nlp_array[j]);
+            keyword += encodeURI(nlp_word);
+
+            this.KEYWORD_TYPE_LIST.push(typeList[i]);
           }
         }
         else {
           keyword += "+";
+
+          let w = wordList[i].replace(/(^\s*)|(\s*$)/g, "");
+
+          if (w.length == 0) {
+            continue;
+          }
+
           if (typeList[i] == "-") {
             keyword += "-";
+            this.KEYWORD_LIST.push("-" + w);
           }
-          keyword += encodeURI(wordList[i]);
+          else {
+            this.KEYWORD_LIST.push(w);
+          }
+
+          keyword += encodeURI(w);
+
+          this.KEYWORD_TYPE_LIST.push(typeList[i]);
         }
 
         q_para += keyword;
@@ -406,5 +451,36 @@ export default class DomOperation {
       chrome.runtime.sendMessage({command: "nlp", word: word}, (response) => {
 
     	});
+    }
+
+    //将URL中的UTF-8字符串转成中文字符串
+    getCharFromUtf8(str) {
+        let cstr = "";
+        let nOffset = 0;
+        if (str == "")
+            return "";
+        str = str.toLowerCase();
+        nOffset = str.indexOf("%e");
+        if (nOffset == -1)
+            return str;
+        while (nOffset != -1) {
+            cstr += str.substr(0, nOffset);
+            str = str.substr(nOffset, str.length - nOffset);
+            if (str == "" || str.length < 9)
+                return cstr;
+            cstr += this.utf8ToChar(str.substr(0, 9));
+            str = str.substr(9, str.length - 9);
+            nOffset = str.indexOf("%e");
+        }
+        return cstr + str;
+    }
+
+    //将编码转换成字符
+    utf8ToChar(str) {
+        var iCode, iCode1, iCode2;
+        iCode = parseInt("0x" + str.substr(1, 2));
+        iCode1 = parseInt("0x" + str.substr(4, 2));
+        iCode2 = parseInt("0x" + str.substr(7, 2));
+        return String.fromCharCode(((iCode & 0x0F) << 12) | ((iCode1 & 0x3F) << 6) | (iCode2 & 0x3F));
     }
 }

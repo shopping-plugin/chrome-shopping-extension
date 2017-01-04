@@ -4546,9 +4546,12 @@ webpackJsonp([0],[
 	    this.next_page_count = 0;
 	    this.next_page_url = "";
 
+	    this.KEYWORD_LIST = [];
+	    this.KEYWORD_TYPE_LIST = [];
+
 	    setTimeout(function () {
 	      _this.cur_page_url = $(document)[0].URL;
-	      _this.initNextPageData();
+	      _this.initPageData();
 	      _this.getNextPage();
 	    }, 1000);
 
@@ -4573,6 +4576,12 @@ webpackJsonp([0],[
 
 	        console.debug(_this.nlp_result);
 	      }
+	      if (request.command == "keyword") {
+	        // console.debug(this.KEYWORD_LIST);
+	        // console.debug(this.KEYWORD_TYPE_LIST);
+
+	        sendResponse({ wordList: _this.KEYWORD_LIST, typeList: _this.KEYWORD_TYPE_LIST, cur_url: _this.cur_page_url });
+	      }
 	    });
 	  }
 
@@ -4583,8 +4592,21 @@ webpackJsonp([0],[
 
 
 	  (0, _createClass3.default)(DomOperation, [{
-	    key: "initNextPageData",
-	    value: function initNextPageData() {
+	    key: "initPageData",
+	    value: function initPageData() {
+	      var q = this.cur_page_url.match(/[&?]q=([^& ]*)/)[1];
+	      var q_array = this.getCharFromUtf8(q).split("+");
+
+	      for (var i = 0; i < q_array.length; i++) {
+	        this.KEYWORD_LIST.push(q_array[i]);
+
+	        if (q_array[i].indexOf("-") == -1) {
+	          this.KEYWORD_TYPE_LIST.push("+");
+	        } else {
+	          this.KEYWORD_TYPE_LIST.push("-");
+	        }
+	      }
+
 	      var next_page = $('ul.items li.item.active').next();
 	      var a = next_page.children();
 
@@ -4715,7 +4737,9 @@ webpackJsonp([0],[
 	        if (isNLP) {
 	          var nlp_array = wordList[i].split("\t");
 	          for (var j = 0; j < nlp_array.length; j++) {
-	            if (nlp_array[j].replace(/(^\s*)|(\s*$)/g, "").length == 0) {
+	            var nlp_word = nlp_array[j].replace(/(^\s*)|(\s*$)/g, "");
+
+	            if (nlp_word.length == 0) {
 	              continue;
 	            }
 
@@ -4723,16 +4747,34 @@ webpackJsonp([0],[
 
 	            if (typeList[i] == "-") {
 	              keyword += "-";
+	              this.KEYWORD_LIST.push("-" + nlp_word);
+	            } else {
+	              this.KEYWORD_LIST.push(nlp_word);
 	            }
 
-	            keyword += encodeURI(nlp_array[j]);
+	            keyword += encodeURI(nlp_word);
+
+	            this.KEYWORD_TYPE_LIST.push(typeList[i]);
 	          }
 	        } else {
 	          keyword += "+";
+
+	          var w = wordList[i].replace(/(^\s*)|(\s*$)/g, "");
+
+	          if (w.length == 0) {
+	            continue;
+	          }
+
 	          if (typeList[i] == "-") {
 	            keyword += "-";
+	            this.KEYWORD_LIST.push("-" + w);
+	          } else {
+	            this.KEYWORD_LIST.push(w);
 	          }
-	          keyword += encodeURI(wordList[i]);
+
+	          keyword += encodeURI(w);
+
+	          this.KEYWORD_TYPE_LIST.push(typeList[i]);
 	        }
 
 	        q_para += keyword;
@@ -4991,6 +5033,40 @@ webpackJsonp([0],[
 	    key: "nlp",
 	    value: function nlp(word) {
 	      chrome.runtime.sendMessage({ command: "nlp", word: word }, function (response) {});
+	    }
+
+	    //将URL中的UTF-8字符串转成中文字符串
+
+	  }, {
+	    key: "getCharFromUtf8",
+	    value: function getCharFromUtf8(str) {
+	      var cstr = "";
+	      var nOffset = 0;
+	      if (str == "") return "";
+	      str = str.toLowerCase();
+	      nOffset = str.indexOf("%e");
+	      if (nOffset == -1) return str;
+	      while (nOffset != -1) {
+	        cstr += str.substr(0, nOffset);
+	        str = str.substr(nOffset, str.length - nOffset);
+	        if (str == "" || str.length < 9) return cstr;
+	        cstr += this.utf8ToChar(str.substr(0, 9));
+	        str = str.substr(9, str.length - 9);
+	        nOffset = str.indexOf("%e");
+	      }
+	      return cstr + str;
+	    }
+
+	    //将编码转换成字符
+
+	  }, {
+	    key: "utf8ToChar",
+	    value: function utf8ToChar(str) {
+	      var iCode, iCode1, iCode2;
+	      iCode = parseInt("0x" + str.substr(1, 2));
+	      iCode1 = parseInt("0x" + str.substr(4, 2));
+	      iCode2 = parseInt("0x" + str.substr(7, 2));
+	      return String.fromCharCode((iCode & 0x0F) << 12 | (iCode1 & 0x3F) << 6 | iCode2 & 0x3F);
 	    }
 	  }]);
 	  return DomOperation;
