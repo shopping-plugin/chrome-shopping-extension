@@ -3,6 +3,7 @@
  */
 !function(){
     refreshButtons();
+    refreshKeywords();
 
     // 画笔事件触发
     $('#brush').click(function(){
@@ -31,6 +32,44 @@ function off(selector){
     $(selector).addClass('disabled');
 }
 
+function refreshKeywords() {
+  console.debug("keywords");
+
+  var keyword_array = [{"type": "+", "word": "羊毛呢"},
+                      {"type": "+", "word": "修身"},
+                      {"type": "-", "word": "-宽松"},
+                      {"type": "-", "word": "-大毛领"}];
+
+  var keywords = new Bloodhound({
+    datumTokenizer: Bloodhound.tokenizers.obj.whitespace('word'),
+    queryTokenizer: Bloodhound.tokenizers.whitespace,
+    local: keyword_array
+  });
+  keywords.initialize();
+
+  var elt = $('#keyword');
+  elt.tagsinput({
+    tagClass: function(item) {
+      switch (item.type) {
+        case '-'  : return 'label label-danger label-important';
+        case '+': return 'label label-success';
+      }
+    },
+    itemValue: 'word',
+    itemText: 'word',
+    typeaheadjs: {
+      name: 'keywords',
+      displayKey: 'word',
+      source: keywords.ttAdapter()
+    }
+  });
+
+  elt.tagsinput('add', {"type": "+", "word": "羊毛呢"});
+  elt.tagsinput('add', {"type": "+", "word": "修身"});
+  elt.tagsinput('add', {"type": "-", "word": "-宽松"});
+  elt.tagsinput('add', {"type": "-", "word": "-大毛领"});
+}
+
 // 在特定时间后关闭popup页面
 $(function(){
     var closeTimeout = [];
@@ -38,7 +77,7 @@ $(function(){
     $('body').mouseout(function(){
         closeTimeout.push(setTimeout(function(){
             window.close();
-        }, 800));
+        }, 3000));
     });
 
     $('body').mouseover(function(){
