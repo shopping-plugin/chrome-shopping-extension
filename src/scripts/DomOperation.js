@@ -32,10 +32,11 @@ export default class DomOperation {
         // 接收background发送过来的分词结果
         chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
           if (request.command == "nlp_result") {
-            console.debug(request.result);
-
-            if (request.result.nlp_word_response != undefined) {
-              this.nlp_result = request.result.nlp_word_response.wordresult;
+            if (request.result.success == true) {
+              this.nlp_result = this.getWordListFromNLPResult(request.result.data);
+            }
+            else {
+              console.debug(request.result.errMsg);
             }
 
             console.debug(this.nlp_result);
@@ -137,6 +138,30 @@ export default class DomOperation {
     }
 
     /*
+     * 从服务器返回的分词结果中提取出词组
+     */
+    getWordListFromNLPResult(nlp_result) {
+      let wordList = [];
+      let nlp_word = [];
+
+      for (let i = 0; i < nlp_result.length; i++) {
+        let result = nlp_result[i];
+
+        if (result.word == "-") {
+          wordList.push(nlp_word.join("\t"));
+          nlp_word = [];
+        }
+        else {
+          nlp_word.push(result.word);
+        }
+      }
+
+      wordList.push(nlp_word.join("\t"));
+
+      return wordList;
+    }
+
+    /*
      * 供笔迹识别部分调用的接口 - 关键字过滤
      */
     filterText(wordList, typeList) {
@@ -148,15 +173,14 @@ export default class DomOperation {
 
       setTimeout(() => {
         // 未获取到分词结果或分词失败，则使用未分词的word进行过滤
-        if (this.nlp_result == "" || this.nlp_result.top_status == false) {
+        if (this.nlp_result == "") {
           this.filterKeyword(wordList, typeList, false);
         }
         // 使用分词结果过滤
         else {
-          wordList = this.nlp_result.top_result.split("-");
-          this.filterKeyword(wordList, typeList, true);
+          this.filterKeyword(this.nlp_result, typeList, true);
         }
-      }, 3000);
+      }, 2000);
     }
 
     /*
@@ -164,7 +188,7 @@ export default class DomOperation {
      */
     filterKeyword(wordList, typeList, isNLP) {
       let filter_url = this.getFilterURL(wordList, typeList, isNLP);
-      console.debug(wordList, typeList, isNLP);
+      //console.debug(wordList, typeList, isNLP);
       this.createTab(filter_url);
     }
 

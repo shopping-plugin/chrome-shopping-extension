@@ -4568,10 +4568,10 @@ webpackJsonp([0],[
 	    // 接收background发送过来的分词结果
 	    chrome.runtime.onMessage.addListener(function (request, sender, sendResponse) {
 	      if (request.command == "nlp_result") {
-	        console.debug(request.result);
-
-	        if (request.result.nlp_word_response != undefined) {
-	          _this.nlp_result = request.result.nlp_word_response.wordresult;
+	        if (request.result.success == true) {
+	          _this.nlp_result = _this.getWordListFromNLPResult(request.result.data);
+	        } else {
+	          console.debug(request.result.errMsg);
 	        }
 
 	        console.debug(_this.nlp_result);
@@ -4682,6 +4682,32 @@ webpackJsonp([0],[
 	    }
 
 	    /*
+	     * 从服务器返回的分词结果中提取出词组
+	     */
+
+	  }, {
+	    key: "getWordListFromNLPResult",
+	    value: function getWordListFromNLPResult(nlp_result) {
+	      var wordList = [];
+	      var nlp_word = [];
+
+	      for (var i = 0; i < nlp_result.length; i++) {
+	        var result = nlp_result[i];
+
+	        if (result.word == "-") {
+	          wordList.push(nlp_word.join("\t"));
+	          nlp_word = [];
+	        } else {
+	          nlp_word.push(result.word);
+	        }
+	      }
+
+	      wordList.push(nlp_word.join("\t"));
+
+	      return wordList;
+	    }
+
+	    /*
 	     * 供笔迹识别部分调用的接口 - 关键字过滤
 	     */
 
@@ -4698,15 +4724,14 @@ webpackJsonp([0],[
 
 	      setTimeout(function () {
 	        // 未获取到分词结果或分词失败，则使用未分词的word进行过滤
-	        if (_this3.nlp_result == "" || _this3.nlp_result.top_status == false) {
+	        if (_this3.nlp_result == "") {
 	          _this3.filterKeyword(wordList, typeList, false);
 	        }
 	        // 使用分词结果过滤
 	        else {
-	            wordList = _this3.nlp_result.top_result.split("-");
-	            _this3.filterKeyword(wordList, typeList, true);
+	            _this3.filterKeyword(_this3.nlp_result, typeList, true);
 	          }
-	      }, 3000);
+	      }, 2000);
 	    }
 
 	    /*
@@ -4717,7 +4742,7 @@ webpackJsonp([0],[
 	    key: "filterKeyword",
 	    value: function filterKeyword(wordList, typeList, isNLP) {
 	      var filter_url = this.getFilterURL(wordList, typeList, isNLP);
-	      console.debug(wordList, typeList, isNLP);
+	      //console.debug(wordList, typeList, isNLP);
 	      this.createTab(filter_url);
 	    }
 
