@@ -20,8 +20,9 @@ export default class DomOperation {
         }, 1000);
 
         // 存储过往操作的黑白名单，在填补空白时对商品进行过滤
-        this.WHITE_LIST = [];
-        this.BLACK_LIST = [];
+        this.WHITE_ID_LIST = [];
+        this.BLACK_ID_LIST = [];
+        this.WHITE_DOM_LIST = [];
 
         // 不同的笔迹类型
         this.SIGN_WHITE = "SIGN_WHITE";	// 大圈
@@ -46,6 +47,9 @@ export default class DomOperation {
             // console.debug(this.KEYWORD_TYPE_LIST);
 
             sendResponse({wordList: this.KEYWORD_LIST, typeList: this.KEYWORD_TYPE_LIST, cur_url: this.cur_page_url});
+          }
+          if (request.command == "url_change") {
+            this.handleURLChange(request.url);
           }
         });
     }
@@ -273,18 +277,28 @@ export default class DomOperation {
     		if (cur_id == "")
     			continue;
 
-    		// 大叉，黑名单，直接删除商品，并填补造成的页面空缺
+    		// 大叉，黑名单，
+        // 若是白名单商品，则从WHITE_LIST中去除，并将该商品移到现有白名单商品之后
+        // 否则，删除商品，并填补造成的页面空缺
     		if (cur_type == this.SIGN_BLACK) {
-    			this.updateItem(cur_item, cur_id);
+          if ($.inArray(cur_id, this.WHITE_ID_LIST) != -1) {
+            let first_gray_product = this.getFirstGrayProduct(page_style);
 
-    			if ($('#' + cur_id).length > 0) {
-    				$('#' + cur_id).remove();
-    				this.BLACK_LIST.push(cur_id);
+            this.removeItemFromWhite(cur_item, cur_id);
+            $('#' + cur_id).insertBefore(first_gray_product);
+          }
+          else {
+            this.updateItem(cur_item, cur_id);
 
-    				if (this.next_page_dom_list != "") {
-              this.fillInBlank(page_style);
-            }
-    			}
+      			if ($('#' + cur_id).length > 0) {
+      				$('#' + cur_id).remove();
+      				this.BLACK_ID_LIST.push(cur_id);
+
+      				if (this.next_page_dom_list != "") {
+                this.fillInBlank(page_style);
+              }
+      			}
+          }
     		}
     		// 将白名单内商品排列到最前
     		else if (cur_type == this.SIGN_WHITE) {
@@ -295,13 +309,46 @@ export default class DomOperation {
 
     			if ($('#' + cur_id).length > 0) {
     				$('#' + cur_id).insertBefore(first_product);
-    				this.WHITE_LIST.push(cur_id);
+    				this.WHITE_ID_LIST.push(cur_id);
+            this.WHITE_DOM_LIST.push($('#' + cur_id));
 
     				// 新开标签页，显示该商品的商品详情
     				this.createTab(cur_img.parentNode.href);
     			}
     		}
     	}
+    }
+
+    /*
+     * 当页面URL变更（点击过滤条件或下一页）时刷新页面内容
+     * TODO 更新next_page_iframe
+     */
+    handleURLChange(new_url) {
+      console.debug(new_url, this.WHITE_ID_LIST, this.BLACK_ID_LIST, this.WHITE_DOM_LIST);
+
+      let page_style = this.getPageStyle();
+
+      // 删除页面中已有的黑白名单商品
+      let item_list = this.getPageItemList(page_style);
+      for (let i = 0; i < item_list.length; i++) {
+        let item = item_list.eq(i);
+        let item_id = this.getProductIdFromDom(item);
+
+        if ($.inArray(item_id, this.BLACK_ID_LIST) != -1 || $.inArray(item_id, this.WHITE_ID_LIST) != -1) {
+          this.updateItem(item, item_id);
+
+          if ($('#' + item_id).length > 0) {
+            $('#' + item_id).remove();
+          }
+        }
+      }
+
+      // 添加白名单商品至最前
+      let first_product = this.getFirstProduct(page_style);
+      for (let i = 0; i < this.WHITE_DOM_LIST.length; i++) {
+        let item = this.WHITE_DOM_LIST[i];
+        item.insertBefore(first_product);
+      }
     }
 
     /*
@@ -318,12 +365,27 @@ export default class DomOperation {
 
     /*
      * 根据商品id更新该商品所在dom元素
-       增加id属性；增加背景色样式
+     * 增加id属性；增加背景色样式
      */
     updateItem(item, p_id) {
-    	item.id = p_id;
-    	item.style.backgroundColor = "#FFCCCC";
-      item.className += " white";
+      $(item).attr("id", p_id);
+      $(item).css("background-color","#FFCCCC");
+      $(item).addClass("white");
+    }
+
+    /*
+     * 从白名单列表中删除商品
+     * 去除商品的背景色样式
+     */
+    removeItemFromWhite(item, p_id) {
+      let index = this.WHITE_ID_LIST.indexOf(p_id);
+      if (index > -1) {
+         this.WHITE_ID_LIST.splice(index, 1);
+         this.WHITE_DOM_LIST.splice(index, 1);
+      }
+
+      $(item).css("background-color","");
+      $(item).removeClass("white");
     }
 
     /*
@@ -393,7 +455,7 @@ export default class DomOperation {
      */
     checkProduct(numiid) {
     	// 是否是黑白名单商品
-    	if ($.inArray(numiid, this.WHITE_LIST) != -1 || $.inArray(numiid, this.BLACK_LIST) != -1) {
+    	if ($.inArray(numiid, this.WHITE_ID_LIST) != -1 || $.inArray(numiid, this.BLACK_ID_LIST) != -1) {
     		return false;
     	}
 
@@ -433,29 +495,43 @@ export default class DomOperation {
     }
 
     /*
+     * 获取当前页面的商品列表
+     */
+    getPageItemList(page_style) {
+      if (page_style == this.GRID_STYLE) {
+        return $('div.item.J_MouserOnverReq');
+      }
+      else {
+        return $('div.item.g-clearfix');
+      }
+    }
+
+    /*
      * 返回当前页面列表中第一个商品dom元素
      */
     getFirstProduct(page_style) {
-    	if (page_style == this.GRID_STYLE) {
-    		return $('div.item.J_MouserOnverReq').eq(0);
-    	}
-    	else {
-    		return $('div.item.g-clearfix').eq(0);
-    	}
+      return this.getPageItemList(page_style).eq(0);
+    }
+
+    /*
+     * 返回当前页面列表中第一个非白名单商品dom元素
+     */
+    getFirstGrayProduct(page_style) {
+      let item_list = this.getPageItemList(page_style);
+
+      for (let i = 0; i < item_list.length; i++) {
+        let item = item_list.eq(i);
+        if (!item.hasClass("white")) {
+          return item;
+        }
+      }
     }
 
     /*
      * 返回当前页面列表中最后一个商品dom元素
      */
     getLastProduct(page_style) {
-    	let container;
-    	if (page_style == this.GRID_STYLE) {
-    		container = $('div.item.J_MouserOnverReq');
-    	}
-    	else {
-    		container = $('div.item.g-clearfix');
-    	}
-
+    	let container = this.getPageItemList(page_style);
     	return container.eq(container.length - 1);
     }
 

@@ -18,7 +18,7 @@ var page_url = "";
     // 搜索事件触发
     $('#search_btn').click(function(){
         console.debug($("#keyword").val());
-        createSearchTab($("#keyword").val().split(","));
+        createSearchTab($("#keyword").val().split(" "));
     });
 }();
 
@@ -54,41 +54,43 @@ function refreshKeywords() {
 }
 
 function updateInputText(wordList, typeList) {
-  let keyword_array = [];
+  $('#keyword').val(wordList.join(" "));
 
-  for (let i = 0; i < wordList.length; i++) {
-    keyword_array.push({"type": typeList[i], "word": wordList[i]});
-  }
-
-  console.debug(keyword_array);
-
-  let keywords = new Bloodhound({
-    datumTokenizer: Bloodhound.tokenizers.obj.whitespace('word'),
-    queryTokenizer: Bloodhound.tokenizers.whitespace,
-    local: keyword_array
-  });
-  keywords.initialize();
-
-  let elt = $('#keyword');
-  elt.tagsinput({
-    tagClass: function(item) {
-      switch (item.type) {
-        case '-'  : return 'label label-danger label-important';
-        case '+': return 'label label-success';
-      }
-    },
-    itemValue: 'word',
-    itemText: 'word',
-    typeaheadjs: {
-      name: 'keywords',
-      displayKey: 'word',
-      source: keywords.ttAdapter()
-    }
-  });
-
-  for (let i = 0; i < wordList.length; i++) {
-    elt.tagsinput('add', {"type": typeList[i], "word": wordList[i]});
-  }
+  // let keyword_array = [];
+  //
+  // for (let i = 0; i < wordList.length; i++) {
+  //   keyword_array.push({"type": typeList[i], "word": wordList[i]});
+  // }
+  //
+  // console.debug(keyword_array);
+  //
+  // let keywords = new Bloodhound({
+  //   datumTokenizer: Bloodhound.tokenizers.obj.whitespace('word'),
+  //   queryTokenizer: Bloodhound.tokenizers.whitespace,
+  //   local: keyword_array
+  // });
+  // keywords.initialize();
+  //
+  // let elt = $('#keyword');
+  // elt.tagsinput({
+  //   tagClass: function(item) {
+  //     switch (item.type) {
+  //       case '-'  : return 'label label-danger label-important';
+  //       case '+': return 'label label-success';
+  //     }
+  //   },
+  //   itemValue: 'word',
+  //   itemText: 'word',
+  //   typeaheadjs: {
+  //     name: 'keywords',
+  //     displayKey: 'word',
+  //     source: keywords.ttAdapter()
+  //   }
+  // });
+  //
+  // for (let i = 0; i < wordList.length; i++) {
+  //   elt.tagsinput('add', {"type": typeList[i], "word": wordList[i]});
+  // }
 }
 
 // 根据关键字内容新开搜索页面
