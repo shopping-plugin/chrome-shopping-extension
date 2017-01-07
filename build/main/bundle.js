@@ -29,6 +29,10 @@ webpackJsonp([0],[
 
 	var _setting2 = _interopRequireDefault(_setting);
 
+	var _Capture = __webpack_require__(85);
+
+	var _Capture2 = _interopRequireDefault(_Capture);
+
 	function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
 	var state = {
@@ -46,6 +50,23 @@ webpackJsonp([0],[
 	    if (request.command == "buttonStatus") {
 	        sendResponse({ brush: recognizeInstance.markingDomState });
 	    }
+	    if (request.command == "url_change") {
+	        recognizeInstance.domOperation.handleURLChange(request.url);
+
+	        setTimeout(function () {
+	            var webConfig = getWebConfig();
+
+	            if (!state.webType) {
+	                console.log("this webpage is not  a matched target webpage. ");
+	            } else {
+	                recognizeInstance.capture = new _Capture2.default({
+	                    "webConfig": webConfig
+	                });;
+	                recognizeInstance.webConfig = webConfig;
+	                recognizeInstance._init();
+	            }
+	        }, 300);
+	    }
 	});
 
 	$(document).keydown(function (event) {
@@ -62,16 +83,7 @@ webpackJsonp([0],[
 
 	$(document).ready(function () {
 	    setTimeout(function () {
-	        var webConfig = null;
-	        for (var key in _setting2.default) {
-	            var dom = $(_setting2.default[key].identification);
-	            if (dom && dom.length === 1) {
-	                // dom 存在
-	                state.webType = key;
-	                webConfig = _setting2.default[key].webConfig;
-	                break;
-	            }
-	        }
+	        var webConfig = getWebConfig();
 
 	        if (!state.webType) {
 	            console.log("this webpage is not  a matched target webpage. ");
@@ -83,6 +95,21 @@ webpackJsonp([0],[
 	        }
 	    }, 300);
 	});
+
+	function getWebConfig() {
+	    var webConfig = null;
+	    for (var key in _setting2.default) {
+	        var dom = $(_setting2.default[key].identification);
+	        if (dom && dom.length === 1) {
+	            // dom 存在
+	            state.webType = key;
+	            webConfig = _setting2.default[key].webConfig;
+	            break;
+	        }
+	    }
+
+	    return webConfig;
+	}
 	/* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(3)))
 
 /***/ },
@@ -4582,9 +4609,6 @@ webpackJsonp([0],[
 	        // console.debug(this.KEYWORD_TYPE_LIST);
 
 	        sendResponse({ wordList: _this.KEYWORD_LIST, typeList: _this.KEYWORD_TYPE_LIST, cur_url: $(document)[0].URL });
-	      }
-	      if (request.command == "url_change") {
-	        _this.handleURLChange(request.url);
 	      }
 	    });
 	  }

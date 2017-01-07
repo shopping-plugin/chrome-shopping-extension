@@ -48,9 +48,6 @@ export default class DomOperation {
 
             sendResponse({wordList: this.KEYWORD_LIST, typeList: this.KEYWORD_TYPE_LIST, cur_url: $(document)[0].URL});
           }
-          if (request.command == "url_change") {
-            this.handleURLChange(request.url);
-          }
         });
     }
 
