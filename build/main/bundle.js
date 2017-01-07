@@ -4550,7 +4550,7 @@ webpackJsonp([0],[
 	    this.KEYWORD_TYPE_LIST = [];
 
 	    setTimeout(function () {
-	      _this.cur_page_url = $(document)[0].URL;
+	      _this.initKeywordList();
 	      _this.initPageData();
 	      _this.getNextPage();
 	    }, 1000);
@@ -4581,7 +4581,7 @@ webpackJsonp([0],[
 	        // console.debug(this.KEYWORD_LIST);
 	        // console.debug(this.KEYWORD_TYPE_LIST);
 
-	        sendResponse({ wordList: _this.KEYWORD_LIST, typeList: _this.KEYWORD_TYPE_LIST, cur_url: _this.cur_page_url });
+	        sendResponse({ wordList: _this.KEYWORD_LIST, typeList: _this.KEYWORD_TYPE_LIST, cur_url: $(document)[0].URL });
 	      }
 	      if (request.command == "url_change") {
 	        _this.handleURLChange(request.url);
@@ -4589,16 +4589,10 @@ webpackJsonp([0],[
 	    });
 	  }
 
-	  /*
-	   * 根据当前页数初始化下一页数据
-	   * 包括下一页的页数，下一页的URL
-	   */
-
-
 	  (0, _createClass3.default)(DomOperation, [{
-	    key: "initPageData",
-	    value: function initPageData() {
-	      var q = this.cur_page_url.match(/[&?]q=([^& ]*)/)[1];
+	    key: "initKeywordList",
+	    value: function initKeywordList() {
+	      var q = $(document)[0].URL.match(/[&?]q=([^& ]*)/)[1];
 	      var q_array = this.getCharFromUtf8(q).split("+");
 
 	      for (var i = 0; i < q_array.length; i++) {
@@ -4610,12 +4604,25 @@ webpackJsonp([0],[
 	          this.KEYWORD_TYPE_LIST.push("-");
 	        }
 	      }
+	    }
 
+	    /*
+	     * 根据当前页数初始化下一页数据
+	     * 包括下一页的页数，下一页的URL
+	     */
+
+	  }, {
+	    key: "initPageData",
+	    value: function initPageData() {
 	      var next_page = $('ul.items li.item.active').next();
 	      var a = next_page.children();
 
 	      this.next_page_count = a[0].innerText;
 	      this.next_page_url = this.getNextPageURL();
+
+	      if ($('#iframe_div').length != 0) {
+	        $('#iframe_div').remove();
+	      }
 
 	      var iframe_div = document.createElement('div');
 	      iframe_div.id = "iframe_div";
@@ -4630,7 +4637,7 @@ webpackJsonp([0],[
 	  }, {
 	    key: "getNextPageURL",
 	    value: function getNextPageURL() {
-	      var cur_url = this.cur_page_url;
+	      var cur_url = $(document)[0].URL;
 	      var s_para = cur_url.match(/&s=([^& ]*)/);
 
 	      var s_value = this.data_value * (this.next_page_count - 1);
@@ -4757,7 +4764,7 @@ webpackJsonp([0],[
 	  }, {
 	    key: "getFilterURL",
 	    value: function getFilterURL(wordList, typeList, isNLP) {
-	      var cur_url = this.cur_page_url;
+	      var cur_url = $(document)[0].URL;
 	      var q_para = cur_url.match(/[&?]q=([^& ]*)/)[0];
 
 	      for (var i = 0; i < wordList.length; i++) {
@@ -4876,7 +4883,7 @@ webpackJsonp([0],[
 
 	    /*
 	     * 当页面URL变更（点击过滤条件或下一页）时刷新页面内容
-	     * TODO 更新next_page_iframe
+	     * 同时更新next_page_iframe
 	     */
 
 	  }, {
@@ -4907,6 +4914,9 @@ webpackJsonp([0],[
 	        var _item = this.WHITE_DOM_LIST[_i];
 	        _item.insertBefore(first_product);
 	      }
+
+	      this.initPageData();
+	      this.getNextPage();
 	    }
 
 	    /*
