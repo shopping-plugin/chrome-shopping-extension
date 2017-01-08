@@ -5378,7 +5378,7 @@ webpackJsonp([0],[
 					"spec": ">=1.0.10 <2.0.0",
 					"type": "range"
 				},
-				"/Users/yef/codes/chrome-plugin/chrome-shopping-extension"
+				"/Users/i330558/Desktop/chrome-shopping-extension"
 			]
 		],
 		"_from": "tesseract.js@>=1.0.10 <2.0.0",
@@ -5412,7 +5412,7 @@ webpackJsonp([0],[
 		"_shasum": "e11a96ae76147939d9218f88e287fb69414b1e5d",
 		"_shrinkwrap": null,
 		"_spec": "tesseract.js@^1.0.10",
-		"_where": "/Users/yef/codes/chrome-plugin/chrome-shopping-extension",
+		"_where": "/Users/i330558/Desktop/chrome-shopping-extension",
 		"author": "",
 		"browser": {
 			"./src/node/index.js": "./src/browser/index.js"
@@ -5729,6 +5729,14 @@ webpackJsonp([0],[
 	    value: true
 	});
 
+	var _regenerator = __webpack_require__(5);
+
+	var _regenerator2 = _interopRequireDefault(_regenerator);
+
+	var _asyncToGenerator2 = __webpack_require__(63);
+
+	var _asyncToGenerator3 = _interopRequireDefault(_asyncToGenerator2);
+
 	var _classCallCheck2 = __webpack_require__(80);
 
 	var _classCallCheck3 = _interopRequireDefault(_classCallCheck2);
@@ -5765,13 +5773,15 @@ webpackJsonp([0],[
 	            var offset = largeDom.offset;
 	            // make sure all text is black
 	            $(cloneDom).children().children(".H").removeClass("H");
+	            document.body.appendChild(cloneDom);
 	            return new Promise(function (resolve, reject) {
 	                _this.domToImage.toPng(cloneDom).then(function (dataUrl) {
-	                    // cloneDom.remove();
+	                    cloneDom.remove();
 	                    var img = new Image();
 	                    img.src = dataUrl;
+	                    $(document.body).append(img);
 	                    console.log(img.complete);
-	                    if (img.complete) {
+	                    setTimeout(function () {
 	                        var result = _this.clip(img, {
 	                            "startX": range.startX * scale,
 	                            "startY": range.startY * scale,
@@ -5779,18 +5789,7 @@ webpackJsonp([0],[
 	                            "height": range.height * scale
 	                        });
 	                        resolve(result);
-	                    } else {
-	                        img.onload = function () {
-	                            var result = _this.clip(img, {
-	                                "startX": range.startX * scale,
-	                                "startY": range.startY * scale,
-	                                "width": range.width * scale,
-	                                "height": range.height * scale
-	                            });
-	                            resolve(result);
-	                        };
-	                    }
-	                    setTimeout(function () {}, 200);
+	                    }, 500);
 	                }).catch(function (error) {
 	                    reject(error);
 	                });
@@ -5829,14 +5828,35 @@ webpackJsonp([0],[
 	    }, {
 	        key: "clip",
 	        value: function clip(dom, range) {
-	            if (!range || !range.startX || !range.startY || !range.width || !range.height) {
+	            if (!range) {
 	                console.log("clip range params exists error");
 	            }
-	            var base64 = AlloyImage(dom).clip(parseInt(range.startX), parseInt(range.startY), parseInt(range.width), parseInt(range.height)).save("result.png", 1.0);
+	            var base64 = AlloyImage(dom).clip(parseInt(range.startX), parseInt(range.startY), parseInt(range.width), parseInt(range.height)).replace(dom).save("result.png", 1.0);
 	            var image = new Image();
 	            image.src = base64;
 	            return image;
 	        }
+	    }, {
+	        key: "waitImageLoad",
+	        value: function () {
+	            var _ref = (0, _asyncToGenerator3.default)(_regenerator2.default.mark(function _callee(img) {
+	                return _regenerator2.default.wrap(function _callee$(_context) {
+	                    while (1) {
+	                        switch (_context.prev = _context.next) {
+	                            case 0:
+	                            case "end":
+	                                return _context.stop();
+	                        }
+	                    }
+	                }, _callee, this);
+	            }));
+
+	            function waitImageLoad(_x) {
+	                return _ref.apply(this, arguments);
+	            }
+
+	            return waitImageLoad;
+	        }()
 	    }, {
 	        key: "scaleDom",
 	        value: function scaleDom(dom, scale) {
