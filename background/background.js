@@ -19,7 +19,7 @@ chrome.runtime.onMessage.addListener(function(request, sender, sendResponse) {
  	if (request.command == "createTab") {
  		var target_url = request.target;
     console.log(target_url);
- 		chrome.tabs.create({'url': target_url, 'active': false});
+ 		chrome.tabs.create({'url': target_url, 'active': request.active});
 
  		sendResponse({result: "tab created: " + target_url});
  	}

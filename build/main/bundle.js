@@ -4868,7 +4868,7 @@ webpackJsonp([0],[
 	    value: function filterKeyword(wordList, typeList, isNLP) {
 	      var filter_url = this.getFilterURL(wordList, typeList, isNLP);
 	      //console.debug(wordList, typeList, isNLP);
-	      this.createTab(filter_url);
+	      this.createTab(filter_url, true);
 	    }
 
 	    /*
@@ -4989,7 +4989,7 @@ webpackJsonp([0],[
 	              this.WHITE_DOM_LIST.push($('#' + cur_id));
 
 	              // 新开标签页，显示该商品的商品详情
-	              this.createTab(cur_img.parentNode.href);
+	              this.createTab(cur_img.parentNode.href, false);
 	            }
 	          }
 	      }
@@ -5256,8 +5256,8 @@ webpackJsonp([0],[
 
 	  }, {
 	    key: "createTab",
-	    value: function createTab(url) {
-	      chrome.runtime.sendMessage({ command: "createTab", target: url }, function (response) {
+	    value: function createTab(url, active) {
+	      chrome.runtime.sendMessage({ command: "createTab", target: url, active: active }, function (response) {
 	        //console.log(response.result);
 	      });
 	    }
