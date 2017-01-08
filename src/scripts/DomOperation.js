@@ -14,7 +14,7 @@ export default class DomOperation {
         this.KEYWORD_TYPE_LIST = [];
 
         setTimeout(() => {
-          this.cur_page_url = $(document)[0].URL;
+          this.initKeywordList();
           this.initPageData();
           this.getNextPage();
         }, 1000);
@@ -46,20 +46,13 @@ export default class DomOperation {
             // console.debug(this.KEYWORD_LIST);
             // console.debug(this.KEYWORD_TYPE_LIST);
 
-            sendResponse({wordList: this.KEYWORD_LIST, typeList: this.KEYWORD_TYPE_LIST, cur_url: this.cur_page_url});
-          }
-          if (request.command == "url_change") {
-            this.handleURLChange(request.url);
+            sendResponse({wordList: this.KEYWORD_LIST, typeList: this.KEYWORD_TYPE_LIST, cur_url: $(document)[0].URL});
           }
         });
     }
 
-    /*
-     * 根据当前页数初始化下一页数据
-     * 包括下一页的页数，下一页的URL
-     */
-    initPageData() {
-      let q = this.cur_page_url.match(/[&?]q=([^& ]*)/)[1];
+    initKeywordList() {
+      let q = $(document)[0].URL.match(/[&?]q=([^& ]*)/)[1];
       let q_array = this.getCharFromUtf8(q).split("+");
 
       for (let i = 0; i < q_array.length; i++) {
@@ -72,12 +65,22 @@ export default class DomOperation {
           this.KEYWORD_TYPE_LIST.push("-");
         }
       }
+    }
 
+    /*
+     * 根据当前页数初始化下一页数据
+     * 包括下一页的页数，下一页的URL
+     */
+    initPageData() {
       let next_page = $('ul.items li.item.active').next();
       let a = next_page.children();
 
       this.next_page_count = a[0].innerText;
       this.next_page_url = this.getNextPageURL();
+
+      if ($('#iframe_div').length != 0) {
+        $('#iframe_div').remove();
+      }
 
       let iframe_div = document.createElement('div');
       iframe_div.id = "iframe_div";
@@ -89,7 +92,7 @@ export default class DomOperation {
      * 得到待获取的下一页面的URL
      */
     getNextPageURL() {
-      let cur_url = this.cur_page_url;
+      let cur_url = $(document)[0].URL;
       let s_para = cur_url.match(/&s=([^& ]*)/);
 
       let s_value = this.data_value * (this.next_page_count - 1);
@@ -200,7 +203,7 @@ export default class DomOperation {
      * 根据小圈小叉结果构造新的URL
      */
     getFilterURL(wordList, typeList, isNLP) {
-      let cur_url = this.cur_page_url;
+      let cur_url = $(document)[0].URL;
       let q_para = cur_url.match(/[&?]q=([^& ]*)/)[0];
 
       for (let i = 0; i < wordList.length; i++) {
@@ -321,7 +324,7 @@ export default class DomOperation {
 
     /*
      * 当页面URL变更（点击过滤条件或下一页）时刷新页面内容
-     * TODO 更新next_page_iframe
+     * 同时更新next_page_iframe
      */
     handleURLChange(new_url) {
       console.debug(new_url, this.WHITE_ID_LIST, this.BLACK_ID_LIST, this.WHITE_DOM_LIST);
@@ -349,6 +352,9 @@ export default class DomOperation {
         let item = this.WHITE_DOM_LIST[i];
         item.insertBefore(first_product);
       }
+
+      this.initPageData();
+      this.getNextPage();
     }
 
     /*

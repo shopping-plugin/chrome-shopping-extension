@@ -8,7 +8,7 @@ export default class InterceptionWeb {
         this.domToImage = domToImage;
     }
 
-    domToImageLikePng(dom, range)
+    async domToImageLikePng(dom, range)
     {
         const scale = 4;
         const largeDom = this.scaleDom(dom, scale);
@@ -17,65 +17,51 @@ export default class InterceptionWeb {
         // make sure all text is black
         $(cloneDom).children().children(".H").removeClass("H");
         document.body.appendChild(cloneDom);
-        return new Promise((resolve, reject) => {
-            this.domToImage.toPng(cloneDom).then((dataUrl) => {
-                cloneDom.remove();
-                let img = new Image();
-                img.src = dataUrl;
-                setTimeout(() => {
-                    const result = this.clip(img, {
-                        "startX": range.startX * scale,
-                        "startY": range.startY * scale,
-                        "width": range.width * scale,
-                        "height": range.height * scale
-                    });
-                    resolve(result);
-                }, 200);
-            }).catch((error) => {
-                reject(error);
-            });
+        const dataUrl = await this.domToImage.toPng(cloneDom);
+        let img = new Image();
+        img.src = dataUrl;
+        await this.waitImageLoad(img);
+        const result = this.clip(img, {
+            "startX": range.startX * scale,
+            "startY": range.startY * scale,
+            "width": range.width * scale,
+            "height": range.height * scale
         });
-    }
-
-    domToImageLikeJpeg(dom, range)
-    {
-        return new Promise((resolve, reject) => {
-            this.domToImage.toJpeg(dom, { quality: 0.95 }).then((dataUrl) => {
-                const img = new Image();
-                img.src = dataUrl;
-                resolve(img);
-            }).catch((error) => {
-                reject(error);
-            });
-        });
-    }
-
-    domToImageLikeSvg(dom, range)
-    {
-        return new Promise((resolve, reject) => {
-            this.domToImage.toSvg(dom).then((dataUrl) => {
-                const img = new Image();
-                img.src = dataUrl;
-                resolve(img);
-            }).catch((error) => {
-                reject(error);
-            });
-        });
+        //$(document.body).append(result);
+        return result;
     }
 
     clip(dom, range)
     {
-        if (!range || !range.startX || !range.startY || ! range.width || !range.height)
+        if (!range)
         {
             console.log("clip range params exists error");
         }
         const base64 = AlloyImage(dom).clip(parseInt(range.startX),
                 parseInt(range.startY),
                 parseInt(range.width),
-                parseInt(range.height)).save("result.png", 1.0);
+                parseInt(range.height)).replace(dom).save("result.png", 1.0);
         let image = new Image();
         image.src = base64;
         return image;
+    }
+
+    waitImageLoad(img)
+    {
+        return new Promise((resolve, reject) => {
+            let isReady = false;
+            const timer = setInterval(() => {
+                if (img.width > 0 && !isReady)
+                {
+                    isReady = true;
+                    resolve();
+                }
+                if (isReady)
+                {
+                    window.clearInterval(timer);
+                }
+            }, 100);
+        });
     }
 
     scaleDom(dom, scale)

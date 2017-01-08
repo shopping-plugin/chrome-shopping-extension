@@ -1,5 +1,6 @@
 import Recognize from "./Recognize";
 import setting from "../setting/setting";
+import Capture from "../logic/Capture";
 
 const state = {
     "webType": null
@@ -15,6 +16,26 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
   }
   if (request.command == "buttonStatus") {
     sendResponse({brush: recognizeInstance.markingDomState});
+  }
+  if (request.command == "url_change") {
+    recognizeInstance.domOperation.handleURLChange(request.url);
+
+    setTimeout(() => {
+        let webConfig = getWebConfig();
+
+        if (!state.webType)
+        {
+            console.log("this webpage is not  a matched target webpage. ");
+        }
+        else
+        {
+            recognizeInstance.capture = new Capture({
+                "webConfig": webConfig
+            });;
+            recognizeInstance.webConfig = webConfig;
+            recognizeInstance._init();
+        }
+    }, 300);
   }
 });
 
@@ -36,17 +57,7 @@ $(document).keydown((event) => {
 
 $(document).ready(function() {
     setTimeout(() => {
-        let webConfig = null;
-        for( let key in setting )
-        {
-            const dom = $( setting[key].identification );
-            if (dom && dom.length === 1) {
-                // dom 存在
-                state.webType = key;
-                webConfig = setting[key].webConfig;
-                break;
-            }
-        }
+        let webConfig = getWebConfig();
 
         if (!state.webType)
         {
@@ -62,3 +73,19 @@ $(document).ready(function() {
         }
     }, 300);
 });
+
+function getWebConfig() {
+  let webConfig = null;
+  for( let key in setting )
+  {
+      const dom = $( setting[key].identification );
+      if (dom && dom.length === 1) {
+          // dom 存在
+          state.webType = key;
+          webConfig = setting[key].webConfig;
+          break;
+      }
+  }
+
+  return webConfig;
+}

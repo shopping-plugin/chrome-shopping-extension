@@ -131,7 +131,95 @@ export default class Capture {
             left: x,
             right: x + width,
             top: y,
-            bottom: y + height
+            bottom: y + height,
+            width,
+            height
         };
+    }
+/*
+domRange and pointRange must be startX, startY, width, height
+errorTolerance 表示误差范围，
+splitNumber 表示分割数目
+direction 表示分割方向，暂支持 “column”， “row”
+return false 表示参数错误
+*/
+    prefixRange(domRange, pointRange, errorTolerance = 0.3, splitNumber = 2, direction = "column")
+    {
+        if (errorTolerance < 0 || splitNumber < 1 || !domRange || !pointRange)
+        {
+            return false;
+        }
+        const result = null;
+        const unitLength = {
+            width: domRange.width / splitNumber,
+            height: domRange.height / splitNumber
+        };
+
+        let startBlock = -1;
+        let endBlock = splitNumber;
+        const offsetY = unitLength.height * (1 - errorTolerance);
+        const offsetX = unitLength.width * (1 - errorTolerance);
+
+        switch(direction)
+        {
+            case "column":
+                for (let index = 0; index < splitNumber; index ++)
+                {
+                    if (pointRange.startY < (offsetY + index * unitLength.height))
+                    {
+                        startBlock = index;
+                        break;
+                    }
+                }
+                for (let index = 0; index < splitNumber; index ++)
+                {
+                    if ((pointRange.startY + pointRange.height) > (unitLength.height * errorTolerance + index * unitLength.height))
+                    {
+                        endBlock = index;
+                    }
+                }
+
+                if (startBlock < 0)
+                {
+                    return false;
+                }
+                return {
+                    startX: pointRange.startX,
+                    startY: (startBlock * unitLength.height),
+                    width: pointRange.width,
+                    height: (endBlock - startBlock + 1) * unitLength.height
+                };
+
+            case "row":
+            for (let index = 0; index < splitNumber; index ++)
+            {
+                if (pointRange.startX < (offsetX + index * unitLength.width))
+                {
+                    startBlock = index;
+                    break;
+                }
+            }
+            for (let index = 0; index < splitNumber; index ++)
+            {
+                if ((pointRange.startX + pointRange.width) > (unitLength.width * errorTolerance + index * unitLength.width))
+                {
+                    startBlock = index;
+                }
+            }
+
+            if (startBlock < 0)
+            {
+                return false;
+            }
+            return {
+                startX: (startBlock * unitLength.width),
+                startY: pointRange.startY,
+                width: (endBlock - startBlock + 1) * unitLength.width,
+                height: pointRange.height
+            };
+
+            default:
+                return false;
+        }
     }
 }
