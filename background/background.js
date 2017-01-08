@@ -17,6 +17,10 @@ chrome.runtime.onInstalled.addListener(function() {
 chrome.runtime.onMessage.addListener(function(request, sender, sendResponse) {
  	// 新开商品详情页面
  	if (request.command == "createTab") {
+    if (request.closeCurrent == true) {
+      chrome.tabs.remove(sender.tab.id);
+    }
+
  		var target_url = request.target;
     console.log(target_url);
  		chrome.tabs.create({'url': target_url, 'active': request.active});

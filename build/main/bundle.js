@@ -53,22 +53,19 @@ webpackJsonp([0],[
 	    if (request.command == "url_change") {
 	        recognizeInstance.domOperation.handleURLChange(request.url);
 
-	        // setTimeout(() => {
-	        //     let webConfig = getWebConfig();
-	        //
-	        //     if (!state.webType)
-	        //     {
-	        //         console.log("this webpage is not  a matched target webpage. ");
-	        //     }
-	        //     else
-	        //     {
-	        //         recognizeInstance.capture = new Capture({
-	        //             "webConfig": webConfig
-	        //         });;
-	        //         recognizeInstance.webConfig = webConfig;
-	        //         recognizeInstance._init();
-	        //     }
-	        // }, 300);
+	        setTimeout(function () {
+	            var webConfig = getWebConfig();
+
+	            if (!state.webType) {
+	                console.log("this webpage is not  a matched target webpage. ");
+	            } else {
+	                recognizeInstance.capture = new _Capture2.default({
+	                    "webConfig": webConfig
+	                });;
+	                recognizeInstance.webConfig = webConfig;
+	                recognizeInstance._init();
+	            }
+	        }, 300);
 	    }
 	});
 
@@ -638,7 +635,6 @@ webpackJsonp([0],[
 	    }, {
 	        key: "drawConnectedPoint",
 	        value: function drawConnectedPoint(from, to) {
-	            console.log(this._g, "this._g");
 	            this._g.beginPath();
 	            this._g.moveTo(this._points[from].X, this._points[from].Y);
 	            this._g.lineTo(this._points[to].X, this._points[to].Y);
@@ -4671,8 +4667,12 @@ webpackJsonp([0],[
 	    this.KEYWORD_LIST = [];
 	    this.KEYWORD_TYPE_LIST = [];
 
+	    this.cloudService = new _cloudService2.default();
+	    this.affairId = "";
+
 	    setTimeout(function () {
 	      _this.initKeywordList();
+	      _this.retrieveBWList();
 	      _this.initPageData();
 	      _this.getNextPage();
 	    }, 1000);
@@ -4700,9 +4700,6 @@ webpackJsonp([0],[
 	        console.debug(_this.nlp_result);
 	      }
 	      if (request.command == "keyword") {
-	        // console.debug(this.KEYWORD_LIST);
-	        // console.debug(this.KEYWORD_TYPE_LIST);
-
 	        sendResponse({ wordList: _this.KEYWORD_LIST, typeList: _this.KEYWORD_TYPE_LIST, cur_url: $(document)[0].URL });
 	      }
 	    });
@@ -4723,6 +4720,59 @@ webpackJsonp([0],[
 	          this.KEYWORD_TYPE_LIST.push("-");
 	        }
 	      }
+	    }
+
+	    /*
+	     * 若local storage中存在黑白名单列表
+	     * 则取出，对页面进行更新
+	     * 然后删除列表
+	     */
+
+	  }, {
+	    key: "retrieveBWList",
+	    value: function retrieveBWList() {
+	      var _this2 = this;
+
+	      chrome.storage.local.get(['WHITE_ID_LIST', 'WHITE_DOM_LIST', 'BLACK_ID_LIST'], function (items) {
+	        var isNewAffair = true;
+
+	        if (items.WHITE_ID_LIST != undefined) {
+	          _this2.WHITE_ID_LIST = items.WHITE_ID_LIST;
+
+	          isNewAffair = false;
+	        }
+	        if (items.WHITE_DOM_LIST != undefined) {
+	          var dom_list = items.WHITE_DOM_LIST;
+
+	          var oParser = new DOMParser();
+	          for (var i = 0; i < dom_list.length; i++) {
+	            var dom = $(oParser.parseFromString(dom_list[i], "text/xml"));
+	            _this2.WHITE_DOM_LIST.push(dom.children().eq(0));
+	          }
+
+	          isNewAffair = false;
+	        }
+	        if (items.BLACK_ID_LIST != undefined) {
+	          _this2.BLACK_ID_LIST = items.BLACK_ID_LIST;
+
+	          isNewAffair = false;
+	        }
+
+	        if (isNewAffair) {
+	          _this2.affairId = new Date();
+	          var q = $(document)[0].URL.match(/[&?]q=([^& ]*)/)[1];
+	          var q_array = _this2.getCharFromUtf8(q).split("+");
+
+	          _this2.cloudService.beginNewAffair(_this2.affairId, $(document)[0].URL, q_array);
+	          console.debug("begin new affair");
+	        }
+
+	        console.debug(_this2.WHITE_ID_LIST, _this2.WHITE_DOM_LIST, _this2.BLACK_ID_LIST);
+
+	        _this2.refreshPageByBWList();
+	      });
+
+	      chrome.storage.local.remove(['WHITE_ID_LIST', 'WHITE_DOM_LIST', 'BLACK_ID_LIST']);
 	    }
 
 	    /*
@@ -4774,7 +4824,7 @@ webpackJsonp([0],[
 	  }, {
 	    key: "getNextPage",
 	    value: function getNextPage() {
-	      var _this2 = this;
+	      var _this3 = this;
 
 	      if ($('#next_page_iframe').length != 0) {
 	        $('#next_page_iframe').remove();
@@ -4795,18 +4845,16 @@ webpackJsonp([0],[
 	        }, 3000, function () {
 	          // Animation complete
 	          var item_list = void 0;
-	          if (_this2.getPageStyle() == _this2.GRID_STYLE) {
+	          if (_this3.getPageStyle() == _this3.GRID_STYLE) {
 	            item_list = iframe_window.find("div.grid.g-clearfix").children().eq(0);
 	          } else {
 	            item_list = iframe_window.find("div.items.g-clearfix");
 	          }
 
-	          _this2.next_page_dom_list = item_list.children();
-	          _this2.item_index = 0;
-	          _this2.next_page_count++;
-	          _this2.next_page_url = _this2.getNextPageURL();
-
-	          //console.debug(this.next_page_dom_list);
+	          _this3.next_page_dom_list = item_list.children();
+	          _this3.item_index = 0;
+	          _this3.next_page_count++;
+	          _this3.next_page_url = _this3.getNextPageURL();
 	        });
 	      }, 3000);
 	    }
@@ -4844,7 +4892,7 @@ webpackJsonp([0],[
 	  }, {
 	    key: "filterText",
 	    value: function filterText(wordList, typeList) {
-	      var _this3 = this;
+	      var _this4 = this;
 
 	      this.nlp_result = "";
 
@@ -4854,12 +4902,12 @@ webpackJsonp([0],[
 
 	      setTimeout(function () {
 	        // 未获取到分词结果或分词失败，则使用未分词的word进行过滤
-	        if (_this3.nlp_result == "") {
-	          _this3.filterKeyword(wordList, typeList, false);
+	        if (_this4.nlp_result == "") {
+	          _this4.filterKeyword(wordList, typeList, false);
 	        }
 	        // 使用分词结果过滤
 	        else {
-	            _this3.filterKeyword(_this3.nlp_result, typeList, true);
+	            _this4.filterKeyword(_this4.nlp_result, typeList, true);
 	          }
 	      }, 2000);
 	    }
@@ -4872,8 +4920,29 @@ webpackJsonp([0],[
 	    key: "filterKeyword",
 	    value: function filterKeyword(wordList, typeList, isNLP) {
 	      var filter_url = this.getFilterURL(wordList, typeList, isNLP);
-	      //console.debug(wordList, typeList, isNLP);
-	      this.createTab(filter_url, true);
+
+	      // 存储黑白名单至local storage
+	      this.storeBWList();
+
+	      // 关闭当前页，转到新标签页
+	      this.createTab(filter_url, true, true);
+	    }
+
+	    /*
+	     * 将黑白名单列表存储到local storage
+	     */
+
+	  }, {
+	    key: "storeBWList",
+	    value: function storeBWList() {
+	      var dom_list = [];
+
+	      var oSerializer = new XMLSerializer();
+	      for (var i = 0; i < this.WHITE_DOM_LIST.length; i++) {
+	        dom_list.push(oSerializer.serializeToString(this.WHITE_DOM_LIST[i][0]));
+	      }
+
+	      chrome.storage.local.set({ 'WHITE_ID_LIST': this.WHITE_ID_LIST, 'WHITE_DOM_LIST': dom_list, 'BLACK_ID_LIST': this.BLACK_ID_LIST });
 	    }
 
 	    /*
@@ -4903,8 +4972,10 @@ webpackJsonp([0],[
 	            if (typeList[i] == "-") {
 	              keyword += "-";
 	              this.KEYWORD_LIST.push("-" + nlp_word);
+	              this.cloudService.deleteKeyword(this.affairId, nlp_word, cur_url);
 	            } else {
 	              this.KEYWORD_LIST.push(nlp_word);
+	              this.cloudService.addKeyword(this.affairId, nlp_word, cur_url);
 	            }
 
 	            keyword += encodeURI(nlp_word);
@@ -4923,8 +4994,10 @@ webpackJsonp([0],[
 	          if (typeList[i] == "-") {
 	            keyword += "-";
 	            this.KEYWORD_LIST.push("-" + w);
+	            this.cloudService.deleteKeyword(this.affairId, w, cur_url);
 	          } else {
 	            this.KEYWORD_LIST.push(w);
+	            this.cloudService.addKeyword(this.affairId, w, cur_url);
 	          }
 
 	          keyword += encodeURI(w);
@@ -4968,12 +5041,15 @@ webpackJsonp([0],[
 
 	            this.removeItemFromWhite(cur_item, cur_id);
 	            $('#' + cur_id).insertBefore(first_gray_product);
+
+	            this.cloudService.deleteWhiteListItem(this.affairId, cur_id);
 	          } else {
 	            this.updateItem(cur_item, cur_id);
 
 	            if ($('#' + cur_id).length > 0) {
 	              $('#' + cur_id).remove();
 	              this.BLACK_ID_LIST.push(cur_id);
+	              this.cloudService.addBlackListItem(this.affairId, cur_id);
 
 	              if (this.next_page_dom_list != "") {
 	                this.fillInBlank(page_style);
@@ -4983,6 +5059,10 @@ webpackJsonp([0],[
 	        }
 	        // 将白名单内商品排列到最前
 	        else if (cur_type == this.SIGN_WHITE) {
+	            if ($.inArray(cur_id, this.WHITE_ID_LIST) != -1) {
+	              continue;
+	            }
+
 	            // 当前商品列表第一个元素，将白名单商品添加在其前即可
 	            var first_product = this.getFirstProduct(page_style);
 
@@ -4992,9 +5072,10 @@ webpackJsonp([0],[
 	              $('#' + cur_id).insertBefore(first_product);
 	              this.WHITE_ID_LIST.push(cur_id);
 	              this.WHITE_DOM_LIST.push($('#' + cur_id));
+	              this.cloudService.addWhiteListItem(this.affairId, cur_id);
 
 	              // 新开标签页，显示该商品的商品详情
-	              this.createTab(cur_img.parentNode.href, false);
+	              this.createTab(cur_img.parentNode.href, false, false);
 	            }
 	          }
 	      }
@@ -5010,6 +5091,20 @@ webpackJsonp([0],[
 	    value: function handleURLChange(new_url) {
 	      console.debug(new_url, this.WHITE_ID_LIST, this.BLACK_ID_LIST, this.WHITE_DOM_LIST);
 
+	      this.cloudService.nextPage(this.affairId, new_url);
+	      this.refreshPageByBWList();
+
+	      this.initPageData();
+	      this.getNextPage();
+	    }
+
+	    /*
+	     * 根据继承下来的黑白名单更新页面内容
+	     */
+
+	  }, {
+	    key: "refreshPageByBWList",
+	    value: function refreshPageByBWList() {
 	      var page_style = this.getPageStyle();
 
 	      // 删除页面中已有的黑白名单商品
@@ -5033,9 +5128,6 @@ webpackJsonp([0],[
 	        var _item = this.WHITE_DOM_LIST[_i];
 	        _item.insertBefore(first_product);
 	      }
-
-	      this.initPageData();
-	      this.getNextPage();
 	    }
 
 	    /*
@@ -5105,14 +5197,14 @@ webpackJsonp([0],[
 	  }, {
 	    key: "getNewProduct",
 	    value: function getNewProduct(page_style) {
-	      var _this4 = this;
+	      var _this5 = this;
 
 	      while (true) {
 	        // 下一页商品用完，继续获取下下页商品
 	        if (this.item_index == this.next_page_dom_list.length) {
 	          this.getNextPage();
 	          setTimeout(function () {
-	            _this4.fillInBlank(page_style);
+	            _this5.fillInBlank(page_style);
 	          }, 6000);
 
 	          break;
@@ -5261,8 +5353,8 @@ webpackJsonp([0],[
 
 	  }, {
 	    key: "createTab",
-	    value: function createTab(url, active) {
-	      chrome.runtime.sendMessage({ command: "createTab", target: url, active: active }, function (response) {
+	    value: function createTab(url, active, closeCurrent) {
+	      chrome.runtime.sendMessage({ command: "createTab", target: url, active: active, closeCurrent: closeCurrent }, function (response) {
 	        //console.log(response.result);
 	      });
 	    }
@@ -5478,6 +5570,82 @@ webpackJsonp([0],[
 	            };
 	            chrome.runtime.sendMessage({
 	                "command": "deleteKeyword",
+	                "data": data
+	            }, function (res) {});
+	        }
+
+	        /**
+	         * 添加筛选条件
+	         * @param affairId
+	         * @param filters  筛选条件数组 ["长款", "..."]
+	         */
+
+	    }, {
+	        key: "addFilter",
+	        value: function addFilter(affairId, filters) {
+	            var data = {
+	                "affairId": affairId,
+	                "filters": filters
+	            };
+	            chrome.runtime.sendMessage({
+	                "command": "addFilter",
+	                "data": data
+	            }, function (res) {});
+	        }
+
+	        /**
+	         * 删除筛选条件
+	         * @param affairId
+	         * @param filters
+	         */
+
+	    }, {
+	        key: "deleteFilter",
+	        value: function deleteFilter(affairId, filters) {
+	            var data = {
+	                "affairId": affairId,
+	                "filters": filters
+	            };
+	            chrome.runtime.sendMessage({
+	                "command": "deleteFilter",
+	                "data": data
+	            }, function (res) {});
+	        }
+
+	        /**
+	         * 点击上一页
+	         * @param affairId
+	         * @param url
+	         */
+
+	    }, {
+	        key: "nextPage",
+	        value: function nextPage(affairId, url) {
+	            var data = {
+	                "affairId": affairId,
+	                "url": url
+	            };
+	            chrome.runtime.sendMessage({
+	                "command": "nextPage",
+	                "data": data
+	            }, function (res) {});
+	        }
+
+	        /**
+	         * 点击下一页
+	         * @param affairId
+	         * @param url
+	         */
+
+	    }, {
+	        key: "previousPage",
+	        value: function previousPage(affairId, url) {
+	            var data = {
+	                "affairId": affairId,
+	                "url": url
+	            };
+	            chrome.runtime.sendMessage({
+	                "command": "previousPage",
 	                "data": data
 	            }, function (res) {});
 	        }

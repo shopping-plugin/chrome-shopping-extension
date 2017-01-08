@@ -2,8 +2,6 @@
  * 云端存储服务模块
  */
 
-var _ = require('../lib/underscore-min');
-
 // 全局cloud命名空间
 var cloud = {
     'gdtoken': null,

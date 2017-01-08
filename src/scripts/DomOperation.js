@@ -15,8 +15,12 @@ export default class DomOperation {
         this.KEYWORD_LIST = [];
         this.KEYWORD_TYPE_LIST = [];
 
+        this.cloudService = new cloudService();
+        this.affairId = "";
+
         setTimeout(() => {
           this.initKeywordList();
+          this.retrieveBWList();
           this.initPageData();
           this.getNextPage();
         }, 1000);
@@ -45,9 +49,6 @@ export default class DomOperation {
             console.debug(this.nlp_result);
           }
           if (request.command == "keyword") {
-            // console.debug(this.KEYWORD_LIST);
-            // console.debug(this.KEYWORD_TYPE_LIST);
-
             sendResponse({wordList: this.KEYWORD_LIST, typeList: this.KEYWORD_TYPE_LIST, cur_url: $(document)[0].URL});
           }
         });
@@ -67,6 +68,58 @@ export default class DomOperation {
           this.KEYWORD_TYPE_LIST.push("-");
         }
       }
+    }
+
+    /*
+     * 若local storage中存在黑白名单列表
+     * 则取出，对页面进行更新
+     * 然后删除列表
+     */
+    retrieveBWList() {
+      chrome.storage.local.get([
+        'WHITE_ID_LIST',
+        'WHITE_DOM_LIST',
+        'BLACK_ID_LIST'
+      ], (items) => {
+        let isNewAffair = true;
+
+        if (items.WHITE_ID_LIST != undefined) {
+          this.WHITE_ID_LIST = items.WHITE_ID_LIST;
+
+          isNewAffair = false;
+        }
+        if (items.WHITE_DOM_LIST != undefined) {
+          let dom_list = items.WHITE_DOM_LIST;
+
+          let oParser = new DOMParser();
+          for (let i = 0; i < dom_list.length; i++) {
+            let dom = $(oParser.parseFromString(dom_list[i], "text/xml"));
+            this.WHITE_DOM_LIST.push(dom.children().eq(0));
+          }
+
+          isNewAffair = false;
+        }
+        if (items.BLACK_ID_LIST != undefined) {
+          this.BLACK_ID_LIST = items.BLACK_ID_LIST;
+
+          isNewAffair = false;
+        }
+
+        if (isNewAffair) {
+          this.affairId = new Date();
+          let q = $(document)[0].URL.match(/[&?]q=([^& ]*)/)[1];
+          let q_array = this.getCharFromUtf8(q).split("+");
+
+          this.cloudService.beginNewAffair(this.affairId, $(document)[0].URL, q_array);
+          console.debug("begin new affair");
+        }
+
+        console.debug(this.WHITE_ID_LIST, this.WHITE_DOM_LIST, this.BLACK_ID_LIST);
+
+        this.refreshPageByBWList();
+      });
+
+      chrome.storage.local.remove(['WHITE_ID_LIST', 'WHITE_DOM_LIST', 'BLACK_ID_LIST']);
     }
 
     /*
@@ -140,8 +193,6 @@ export default class DomOperation {
           this.item_index = 0;
           this.next_page_count++;
           this.next_page_url = this.getNextPageURL();
-
-          //console.debug(this.next_page_dom_list);
         });
       }, 3000);
     }
@@ -197,8 +248,26 @@ export default class DomOperation {
      */
     filterKeyword(wordList, typeList, isNLP) {
       let filter_url = this.getFilterURL(wordList, typeList, isNLP);
-      //console.debug(wordList, typeList, isNLP);
-      this.createTab(filter_url, true);
+
+      // 存储黑白名单至local storage
+      this.storeBWList();
+
+      // 关闭当前页，转到新标签页
+      this.createTab(filter_url, true, true);
+    }
+
+    /*
+     * 将黑白名单列表存储到local storage
+     */
+    storeBWList() {
+      let dom_list = [];
+
+      let oSerializer = new XMLSerializer();
+      for (let i = 0; i < this.WHITE_DOM_LIST.length; i++) {
+        dom_list.push(oSerializer.serializeToString(this.WHITE_DOM_LIST[i][0]));
+      }
+
+      chrome.storage.local.set({'WHITE_ID_LIST': this.WHITE_ID_LIST, 'WHITE_DOM_LIST': dom_list, 'BLACK_ID_LIST': this.BLACK_ID_LIST});
     }
 
     /*
@@ -225,9 +294,11 @@ export default class DomOperation {
             if (typeList[i] == "-") {
               keyword += "-";
               this.KEYWORD_LIST.push("-" + nlp_word);
+              this.cloudService.deleteKeyword(this.affairId, nlp_word, cur_url);
             }
             else {
               this.KEYWORD_LIST.push(nlp_word);
+              this.cloudService.addKeyword(this.affairId, nlp_word, cur_url);
             }
 
             keyword += encodeURI(nlp_word);
@@ -247,9 +318,11 @@ export default class DomOperation {
           if (typeList[i] == "-") {
             keyword += "-";
             this.KEYWORD_LIST.push("-" + w);
+            this.cloudService.deleteKeyword(this.affairId, w, cur_url);
           }
           else {
             this.KEYWORD_LIST.push(w);
+            this.cloudService.addKeyword(this.affairId, w, cur_url);
           }
 
           keyword += encodeURI(w);
@@ -291,6 +364,8 @@ export default class DomOperation {
 
             this.removeItemFromWhite(cur_item, cur_id);
             $('#' + cur_id).insertBefore(first_gray_product);
+
+            this.cloudService.deleteWhiteListItem(this.affairId, cur_id);
           }
           else {
             this.updateItem(cur_item, cur_id);
@@ -298,6 +373,7 @@ export default class DomOperation {
       			if ($('#' + cur_id).length > 0) {
       				$('#' + cur_id).remove();
       				this.BLACK_ID_LIST.push(cur_id);
+              this.cloudService.addBlackListItem(this.affairId, cur_id);
 
       				if (this.next_page_dom_list != "") {
                 this.fillInBlank(page_style);
@@ -307,6 +383,10 @@ export default class DomOperation {
     		}
     		// 将白名单内商品排列到最前
     		else if (cur_type == this.SIGN_WHITE) {
+          if ($.inArray(cur_id, this.WHITE_ID_LIST) != -1) {
+            continue;
+          }
+
     			// 当前商品列表第一个元素，将白名单商品添加在其前即可
     			let first_product = this.getFirstProduct(page_style);
 
@@ -316,9 +396,10 @@ export default class DomOperation {
     				$('#' + cur_id).insertBefore(first_product);
     				this.WHITE_ID_LIST.push(cur_id);
             this.WHITE_DOM_LIST.push($('#' + cur_id));
+            this.cloudService.addWhiteListItem(this.affairId, cur_id);
 
     				// 新开标签页，显示该商品的商品详情
-    				this.createTab(cur_img.parentNode.href, false);
+    				this.createTab(cur_img.parentNode.href, false, false);
     			}
     		}
     	}
@@ -331,6 +412,17 @@ export default class DomOperation {
     handleURLChange(new_url) {
       console.debug(new_url, this.WHITE_ID_LIST, this.BLACK_ID_LIST, this.WHITE_DOM_LIST);
 
+      this.cloudService.nextPage(this.affairId, new_url);
+      this.refreshPageByBWList();
+
+      this.initPageData();
+      this.getNextPage();
+    }
+
+    /*
+     * 根据继承下来的黑白名单更新页面内容
+     */
+    refreshPageByBWList() {
       let page_style = this.getPageStyle();
 
       // 删除页面中已有的黑白名单商品
@@ -354,9 +446,6 @@ export default class DomOperation {
         let item = this.WHITE_DOM_LIST[i];
         item.insertBefore(first_product);
       }
-
-      this.initPageData();
-      this.getNextPage();
     }
 
     /*
@@ -546,8 +635,8 @@ export default class DomOperation {
     /*
      * 与background页面通信，以实现新开标签页
      */
-    createTab(url, active) {
-    	chrome.runtime.sendMessage({command: "createTab", target: url, active: active}, (response) => {
+    createTab(url, active, closeCurrent) {
+    	chrome.runtime.sendMessage({command: "createTab", target: url, active: active, closeCurrent: closeCurrent}, (response) => {
     		//console.log(response.result);
     	});
     }
