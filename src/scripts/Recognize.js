@@ -188,7 +188,8 @@ export default class Recognize
                 this.drawText("Too little input made. Please try again.");
             }
             this._strokeID = 0;
-            this._points = new Array();
+            this._points = [];
+            this._isDown = false;
              // signal to begin new gesture on next mouse-down
         }
     }

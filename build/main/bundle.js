@@ -53,19 +53,22 @@ webpackJsonp([0],[
 	    if (request.command == "url_change") {
 	        recognizeInstance.domOperation.handleURLChange(request.url);
 
-	        setTimeout(function () {
-	            var webConfig = getWebConfig();
-
-	            if (!state.webType) {
-	                console.log("this webpage is not  a matched target webpage. ");
-	            } else {
-	                recognizeInstance.capture = new _Capture2.default({
-	                    "webConfig": webConfig
-	                });;
-	                recognizeInstance.webConfig = webConfig;
-	                recognizeInstance._init();
-	            }
-	        }, 300);
+	        // setTimeout(() => {
+	        //     let webConfig = getWebConfig();
+	        //
+	        //     if (!state.webType)
+	        //     {
+	        //         console.log("this webpage is not  a matched target webpage. ");
+	        //     }
+	        //     else
+	        //     {
+	        //         recognizeInstance.capture = new Capture({
+	        //             "webConfig": webConfig
+	        //         });;
+	        //         recognizeInstance.webConfig = webConfig;
+	        //         recognizeInstance._init();
+	        //     }
+	        // }, 300);
 	    }
 	});
 
@@ -364,7 +367,8 @@ webpackJsonp([0],[
 	                        this.drawText("Too little input made. Please try again.");
 	                    }
 	                    this._strokeID = 0;
-	                    this._points = new Array();
+	                    this._points = [];
+	                    this._isDown = false;
 	                    // signal to begin new gesture on next mouse-down
 	                }
 	        }
@@ -634,6 +638,7 @@ webpackJsonp([0],[
 	    }, {
 	        key: "drawConnectedPoint",
 	        value: function drawConnectedPoint(from, to) {
+	            console.log(this._g, "this._g");
 	            this._g.beginPath();
 	            this._g.moveTo(this._points[from].X, this._points[from].Y);
 	            this._g.lineTo(this._points[to].X, this._points[to].Y);
