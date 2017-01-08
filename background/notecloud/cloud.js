@@ -2,13 +2,22 @@
  * 云端存储服务模块
  */
 
+var _ = require('../lib/underscore-min');
+
 // 全局cloud命名空间
 var cloud = {
     'gdtoken': null,
     'file': null,
     'sync': null,
     'configuration': null,
-    'appendLog': null
+    'appendLog': null,
+    'beginNewAffair': null,
+    'addBlackListItem': null,
+    'deleteBlackListItem': null,
+    'addWhiteListItem': null,
+    'deleteWhiteListItem': null,
+    'addKeyword': null,
+    'deleteKeyword': null
 };
 
 
@@ -48,7 +57,7 @@ var cloud = {
                         'fileId': fileId,
                         'data': file
                     }, function (err, fileId) {
-                        if(err){
+                        if (err) {
                             callback(err);
                         }
                     });
@@ -57,9 +66,270 @@ var cloud = {
 
             });
         });
-
     }
 
+    /**
+     * 更新数据的模版方法
+     * @param context 数据上下文
+     * @param prepare 处理file的函数
+     * @param callback
+     */
+    cloud.doBaseWork = function (context, prepare, callback) {
+        //TODO isLocal
+        identify(function () {
+            console.debug('准备根目录...');
+            prepareDir(token, ROOT, null, function (err, rootId) { // 这里的root指ROOT值的目录
+                if (err) return callback(err);
+                console.debug('准备文件数据目录...');
+                prepareFile(token, OPERATION_LOG_FILE, rootId, function (err, fileId, fileData) {
+                    if (err) return callback(err);
+
+                    var file = new NoteFile(fileData);//使用云端的数据生成file
+                    file.__fileId__ = fileId;
+
+                    file = prepare(context, file);//更新数据内容
+
+                    gdapi.update(token, {//更新文件信息
+                        'fileId': fileId,
+                        'data': file
+                    }, function (err, fileId) {
+                        if (err) {
+                            callback(err);
+                        }
+                    });
+                    callback(null, file);
+                });
+
+            });
+        });
+    }
+
+    /**
+     * 开始一个事务
+     * @param data
+     * @param callback
+     */
+    cloud.beginNewAffair = function (data, callback) {
+        cloud.doBaseWork(data, function (data, file) {
+            file.affairId = {};
+            var affair = file.affairId;
+            affair.status = {};
+            affair.status.url = data.url;//初始化url
+            affair.status.filters = [];//初始化筛选条件
+            affair.status.keywords = data.keyword || [];//初始化关键词
+            affair.status.whiteList = [];//初始化白名单
+            affair.status.blacklist = [];//初始化黑名单
+            affair.log = [];//初始化日志列表
+            return file;
+        }, callback);
+
+
+        file.affairId = {};
+        var affair = file.affairId;
+        affair.status = initInfo;
+        affair.log = [];//初始化日志列表
+    }
+
+    /**
+     * 添加黑名单项
+     * @param affairId
+     * @param itemIds
+     */
+    cloud.addBlackListItem = function (data, callback) {
+        cloud.doBaseWork(data, function (data, file) {
+            var affair = file[data.affairId];
+            _.each(data.itemIds, function (content) {
+                affair.status.blackList.push(content);
+                affair.log.push({
+                    "time": Date.now(),
+                    "operation": "addBlackListItem",
+                    "content": content
+                });
+            });
+            return file;
+        }, callback);
+    }
+
+    /**
+     * 删除黑名单项
+     * @param affairId
+     * @param itemIds
+     */
+    cloud.deleteBlackListItem = function (data, callback) {
+        cloud.doBaseWork(data, function (data, file) {
+            var affair = file[data.affairId];
+            _.each(data.itemIds, function (content) {
+                affair.status.blackList.remove(content);
+                affair.log.push({
+                    "time": Date.now(),
+                    "operation": "deleteBlackListItem",
+                    "content": content
+                });
+            });
+            return file;
+        }, callback);
+    }
+
+    /**
+     * 添加白名单项目
+     * @param affairId
+     * @param itemIds
+     */
+    cloud.addWhiteListItem = function (data, callback) {
+        cloud.doBaseWork(data, function (data, file) {
+            var affair = file[data.affairId];
+            _.each(data.itemIds, function (content) {
+                affair.status.whiteList.push(content);
+                affair.log.push({
+                    "time": Date.now(),
+                    "operation": "addWhiteListItem",
+                    "content": content
+                });
+            });
+            return file;
+        }, callback);
+    }
+
+    /**
+     * 删除白名单项
+     * @param affairId
+     * @param itemIds
+     */
+    cloud.deleteWhiteListItem = function (data, callback) {
+        cloud.doBaseWork(data, function (data, file) {
+            var affair = file[data.affairId];
+            _.each(data.itemIds, function (content) {
+                affair.status.whiteList.remove(content);
+                affair.log.push({
+                    "time": Date.now(),
+                    "operation": "deleteWhiteListItem",
+                    "content": content
+                });
+            });
+            return file;
+        }, callback);
+    }
+
+    /**
+     * 添加关键词
+     * @param affairId
+     * @param filters
+     */
+    cloud.addKeyword = function (data, callback) {
+        cloud.doBaseWork(data, function (data, file) {
+            var affair = file[data.affairId];
+            affair.status.url = data.url;
+            _.each(data.keyword, function (content) {
+                affair.status.keywords.push(content);
+                affair.log.push({
+                    "time": Date.now(),
+                    "operation": "addKeyword",
+                    "content": content
+                });
+            });
+            return file;
+        }, callback);
+    }
+
+    /**
+     * 删除关键词
+     * @param affairId
+     * @param filters
+     */
+    cloud.deleteKeyword = function (data, callback) {
+        cloud.doBaseWork(data, function (data, file) {
+            var affair = file[data.affairId];
+            affair.status.url = data.url;
+            _.each(data.keyword, function (content) {
+                affair.status.keywords.remove(content);
+                affair.log.push({
+                    "time": Date.now(),
+                    "operation": "deleteKeyword",
+                    "content": content
+                });
+            });
+            return file;
+        }, callback);
+    }
+
+
+    /**
+     * 添加筛选条件
+     * @param data
+     * @param callback
+     */
+    cloud.addFilter = function (data, callback) {
+        cloud.doBaseWork(data, function (data, file) {
+            var affair = file[data.affairId];
+            affair.status.url = data.url;
+            _.each(data.filters, function (content) {
+                affair.status.filters.push(content);
+                affair.log.push({
+                    "time": Date.now(),
+                    "operation": "addFilter",
+                    "content": content
+                });
+            });
+            return file;
+        }, callback);
+    }
+
+    /**
+     * 删除筛选条件
+     * @param data
+     * @param callback
+     */
+    cloud.deleteFilter = function (data, callback) {
+        cloud.doBaseWork(data, function (data, file) {
+            var affair = file[data.affairId];
+            affair.status.url = data.url;
+            _.each(data.filters, function (content) {
+                affair.status.filters.remove(content);
+                affair.log.push({
+                    "time": Date.now(),
+                    "operation": "deleteFilter",
+                    "content": content
+                });
+            });
+            return file;
+        }, callback);
+    }
+
+    /**
+     * 点击下一页
+     * @param data
+     * @param callback
+     */
+    cloud.nextPage = function (data, callback) {
+        cloud.doBaseWork(data, function (data, file) {
+            var affair = file[data.affairId];
+            affair.status.url = data.url;
+            affair.log.push({
+                    "time": Date.now(),
+                    "operation": "nextPage",
+                    "content": content
+                });
+            return file;
+        }, callback);
+    }
+
+    /**
+     * 点击上一页
+     * @param data
+     * @param callback
+     */
+    cloud.previousPage = function (data, callback) {
+        cloud.doBaseWork(data, function (data, file) {
+            var affair = file[data.affairId];
+            affair.status.url = data.url;
+            affair.log.push({
+                "time": Date.now(),
+                "operation": "previousPage",
+                "content": ""
+            });
+            return file;
+        }, callback);
+    }
 
     /**
      * 使用指定的url获取一个对应于fileName的存储对象

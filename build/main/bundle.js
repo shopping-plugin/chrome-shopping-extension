@@ -3,15 +3,15 @@ webpackJsonp([0],[
 /***/ function(module, exports, __webpack_require__) {
 
 	__webpack_require__(2);
-	__webpack_require__(137);
-	__webpack_require__(141);
+	__webpack_require__(138);
 	__webpack_require__(142);
 	__webpack_require__(143);
 	__webpack_require__(144);
 	__webpack_require__(145);
 	__webpack_require__(146);
 	__webpack_require__(147);
-	module.exports = __webpack_require__(148);
+	__webpack_require__(148);
+	module.exports = __webpack_require__(149);
 
 
 /***/ },
@@ -25,7 +25,7 @@ webpackJsonp([0],[
 
 	var _Recognize2 = _interopRequireDefault(_Recognize);
 
-	var _setting = __webpack_require__(136);
+	var _setting = __webpack_require__(137);
 
 	var _setting2 = _interopRequireDefault(_setting);
 
@@ -158,27 +158,27 @@ webpackJsonp([0],[
 
 	var _DomOperation2 = _interopRequireDefault(_DomOperation);
 
-	var _ImageRecognize = __webpack_require__(120);
+	var _ImageRecognize = __webpack_require__(121);
 
 	var _ImageRecognize2 = _interopRequireDefault(_ImageRecognize);
 
-	var _InterceptionWeb = __webpack_require__(127);
+	var _InterceptionWeb = __webpack_require__(128);
 
 	var _InterceptionWeb2 = _interopRequireDefault(_InterceptionWeb);
 
-	var _PDollarRecognizer = __webpack_require__(132);
+	var _PDollarRecognizer = __webpack_require__(133);
 
 	var _PDollarRecognizer2 = _interopRequireDefault(_PDollarRecognizer);
 
-	var _Point = __webpack_require__(133);
+	var _Point = __webpack_require__(134);
 
 	var _Point2 = _interopRequireDefault(_Point);
 
-	var _PointCloud = __webpack_require__(134);
+	var _PointCloud = __webpack_require__(135);
 
 	var _PointCloud2 = _interopRequireDefault(_PointCloud);
 
-	var _Util = __webpack_require__(135);
+	var _Util = __webpack_require__(136);
 
 	var _Util2 = _interopRequireDefault(_Util);
 
@@ -4647,6 +4647,10 @@ webpackJsonp([0],[
 
 	var _createClass3 = _interopRequireDefault(_createClass2);
 
+	var _cloudService = __webpack_require__(120);
+
+	var _cloudService2 = _interopRequireDefault(_cloudService);
+
 	function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
 	var DomOperation = function () {
@@ -4869,7 +4873,7 @@ webpackJsonp([0],[
 	    value: function filterKeyword(wordList, typeList, isNLP) {
 	      var filter_url = this.getFilterURL(wordList, typeList, isNLP);
 	      //console.debug(wordList, typeList, isNLP);
-	      this.createTab(filter_url);
+	      this.createTab(filter_url, true);
 	    }
 
 	    /*
@@ -4990,7 +4994,7 @@ webpackJsonp([0],[
 	              this.WHITE_DOM_LIST.push($('#' + cur_id));
 
 	              // 新开标签页，显示该商品的商品详情
-	              this.createTab(cur_img.parentNode.href);
+	              this.createTab(cur_img.parentNode.href, false);
 	            }
 	          }
 	      }
@@ -5257,8 +5261,8 @@ webpackJsonp([0],[
 
 	  }, {
 	    key: "createTab",
-	    value: function createTab(url) {
-	      chrome.runtime.sendMessage({ command: "createTab", target: url }, function (response) {
+	    value: function createTab(url, active) {
+	      chrome.runtime.sendMessage({ command: "createTab", target: url, active: active }, function (response) {
 	        //console.log(response.result);
 	      });
 	    }
@@ -5331,7 +5335,177 @@ webpackJsonp([0],[
 
 	var _createClass3 = _interopRequireDefault(_createClass2);
 
-	var _tesseract = __webpack_require__(121);
+	function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
+
+	var CouldServce = function () {
+	    function CouldServce() {
+	        (0, _classCallCheck3.default)(this, CouldServce);
+	    }
+
+	    /**
+	     * 初始化一个事务
+	     * @param affairId 每次开始一个事务请根据当前的时间戳或者其他信息生成一个唯一的affairId
+	     * @param url 网页的url
+	     * @param keyword 关键词是一个数组 例如：["大衣","黑色","..."]
+	     */
+
+
+	    (0, _createClass3.default)(CouldServce, [{
+	        key: "beginNewAffair",
+	        value: function beginNewAffair(affairId, url, keyword) {
+	            var data = {
+	                "affairId": affairId,
+	                "url": url,
+	                "keyword": keyword
+	            };
+	            chrome.runtime.sendMessage({
+	                "command": "beginNewAffair",
+	                "data": data
+	            }, function (res) {});
+	        }
+
+	        /**
+	         * 添加黑名单项
+	         * @param affairId
+	         * @param itemIds ['321332', '3321312'] 商品Id列表
+	         */
+
+	    }, {
+	        key: "addBlackListItem",
+	        value: function addBlackListItem(affairId, itemIds) {
+	            var data = {
+	                "affairId": affairId,
+	                "itemIds": itemIds
+	            };
+	            chrome.runtime.sendMessage({
+	                "command": "addBlackListItem",
+	                "data": data
+	            }, function (res) {});
+	        }
+
+	        /**
+	         * 删除黑名单项
+	         * @param affairId
+	         * @param itemIds
+	         */
+
+	    }, {
+	        key: "deleteBlackListItem",
+	        value: function deleteBlackListItem(affairId, itemIds) {
+	            var data = {
+	                "affairId": affairId,
+	                "itemIds": itemIds
+	            };
+	            chrome.runtime.sendMessage({
+	                "command": "deleteBlackListItem",
+	                "data": data
+	            }, function (res) {});
+	        }
+
+	        /**
+	         * 添加白名单项
+	         * @param affairId
+	         * @param itemIds
+	         */
+
+	    }, {
+	        key: "addWhiteListItem",
+	        value: function addWhiteListItem(affairId, itemIds) {
+	            var data = {
+	                "affairId": affairId,
+	                "itemIds": itemIds
+	            };
+	            chrome.runtime.sendMessage({
+	                "command": "addWhiteListItem",
+	                "data": data
+	            }, function (res) {});
+	        }
+
+	        /**
+	         * 删除白名单项目
+	         * @param affairId
+	         * @param itemIds
+	         */
+
+	    }, {
+	        key: "deleteWhiteListItem",
+	        value: function deleteWhiteListItem(affairId, itemIds) {
+	            var data = {
+	                "affairId": affairId,
+	                "itemIds": itemIds
+	            };
+	            chrome.runtime.sendMessage({
+	                "command": "deleteWhiteListItem",
+	                "data": data
+	            }, function (res) {});
+	        }
+
+	        /**
+	         * 添加关键词
+	         * @param affairId
+	         * @param keyword  ['高领', '...'] 关键词列表
+	         * @param url
+	         */
+
+	    }, {
+	        key: "addKeyword",
+	        value: function addKeyword(affairId, keyword, url) {
+	            var data = {
+	                "affairId": affairId,
+	                "keyword": keyword,
+	                "url": url
+	            };
+	            chrome.runtime.sendMessage({
+	                "command": "addKeyword",
+	                "data": data
+	            }, function (res) {});
+	        }
+
+	        /**
+	         * 删除关键词
+	         * @param affairId
+	         * @param keyword
+	         * @param url
+	         */
+
+	    }, {
+	        key: "deleteKeyword",
+	        value: function deleteKeyword(affairId, keyword, url) {
+	            var data = {
+	                "affairId": affairId,
+	                "keyword": keyword,
+	                "url": url
+	            };
+	            chrome.runtime.sendMessage({
+	                "command": "deleteKeyword",
+	                "data": data
+	            }, function (res) {});
+	        }
+	    }]);
+	    return CouldServce;
+	}();
+
+	exports.default = CouldServce;
+
+/***/ },
+/* 121 */
+/***/ function(module, exports, __webpack_require__) {
+
+	"use strict";
+
+	Object.defineProperty(exports, "__esModule", {
+	    value: true
+	});
+
+	var _classCallCheck2 = __webpack_require__(80);
+
+	var _classCallCheck3 = _interopRequireDefault(_classCallCheck2);
+
+	var _createClass2 = __webpack_require__(81);
+
+	var _createClass3 = _interopRequireDefault(_createClass2);
+
+	var _tesseract = __webpack_require__(122);
 
 	var _tesseract2 = _interopRequireDefault(_tesseract);
 
@@ -5380,14 +5554,14 @@ webpackJsonp([0],[
 	exports.default = ImageRecognize;
 
 /***/ },
-/* 121 */
+/* 122 */
 /***/ function(module, exports, __webpack_require__) {
 
-	const adapter = __webpack_require__(122)
-	const circularize = __webpack_require__(124)
-	const TesseractJob = __webpack_require__(125);
-	const objectAssign = __webpack_require__(126);
-	const version = __webpack_require__(123).version;
+	const adapter = __webpack_require__(123)
+	const circularize = __webpack_require__(125)
+	const TesseractJob = __webpack_require__(126);
+	const objectAssign = __webpack_require__(127);
+	const version = __webpack_require__(124).version;
 
 	function create(workerOptions){
 		workerOptions = workerOptions || {};
@@ -5468,7 +5642,7 @@ webpackJsonp([0],[
 	module.exports = DefaultTesseract
 
 /***/ },
-/* 122 */
+/* 123 */
 /***/ function(module, exports, __webpack_require__) {
 
 	/* WEBPACK VAR INJECTION */(function(process) {var defaultOptions = {
@@ -5481,7 +5655,7 @@ webpackJsonp([0],[
 	    console.debug('Using Development Configuration')
 	    defaultOptions.workerPath = location.protocol + '//' + location.host + '/dist/worker.dev.js?nocache=' + Math.random().toString(36).slice(3)
 	}else{
-	    var version = __webpack_require__(123).version;
+	    var version = __webpack_require__(124).version;
 	    defaultOptions.workerPath = 'https://cdn.rawgit.com/naptha/tesseract.js/' + version + '/dist/worker.js'
 	}
 
@@ -5573,7 +5747,7 @@ webpackJsonp([0],[
 	/* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(8)))
 
 /***/ },
-/* 123 */
+/* 124 */
 /***/ function(module, exports) {
 
 	module.exports = {
@@ -5588,7 +5762,7 @@ webpackJsonp([0],[
 					"spec": ">=1.0.10 <2.0.0",
 					"type": "range"
 				},
-				"/Users/i330558/Desktop/chrome-shopping-extension"
+				"/Users/yef/codes/chrome-plugin/chrome-shopping-extension"
 			]
 		],
 		"_from": "tesseract.js@>=1.0.10 <2.0.0",
@@ -5622,7 +5796,7 @@ webpackJsonp([0],[
 		"_shasum": "e11a96ae76147939d9218f88e287fb69414b1e5d",
 		"_shrinkwrap": null,
 		"_spec": "tesseract.js@^1.0.10",
-		"_where": "/Users/i330558/Desktop/chrome-shopping-extension",
+		"_where": "/Users/yef/codes/chrome-plugin/chrome-shopping-extension",
 		"author": "",
 		"browser": {
 			"./src/node/index.js": "./src/browser/index.js"
@@ -5686,7 +5860,7 @@ webpackJsonp([0],[
 	};
 
 /***/ },
-/* 124 */
+/* 125 */
 /***/ function(module, exports) {
 
 	// The result of dump.js is a big JSON tree
@@ -5754,10 +5928,10 @@ webpackJsonp([0],[
 	}
 
 /***/ },
-/* 125 */
+/* 126 */
 /***/ function(module, exports, __webpack_require__) {
 
-	const adapter = __webpack_require__(122)
+	const adapter = __webpack_require__(123)
 
 	let jobCounter = 0;
 
@@ -5841,7 +6015,7 @@ webpackJsonp([0],[
 
 
 /***/ },
-/* 126 */
+/* 127 */
 /***/ function(module, exports) {
 
 	'use strict';
@@ -5930,7 +6104,7 @@ webpackJsonp([0],[
 
 
 /***/ },
-/* 127 */
+/* 128 */
 /***/ function(module, exports, __webpack_require__) {
 
 	/* WEBPACK VAR INJECTION */(function($) {"use strict";
@@ -5955,11 +6129,11 @@ webpackJsonp([0],[
 
 	var _createClass3 = _interopRequireDefault(_createClass2);
 
-	var _domToImage = __webpack_require__(128);
+	var _domToImage = __webpack_require__(129);
 
 	var _domToImage2 = _interopRequireDefault(_domToImage);
 
-	var _fileSaver = __webpack_require__(129);
+	var _fileSaver = __webpack_require__(130);
 
 	var _fileSaver2 = _interopRequireDefault(_fileSaver);
 
@@ -6099,7 +6273,7 @@ webpackJsonp([0],[
 	/* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(3)))
 
 /***/ },
-/* 128 */
+/* 129 */
 /***/ function(module, exports, __webpack_require__) {
 
 	(function (global) {
@@ -6825,7 +6999,7 @@ webpackJsonp([0],[
 
 
 /***/ },
-/* 129 */
+/* 130 */
 /***/ function(module, exports, __webpack_require__) {
 
 	var __WEBPACK_AMD_DEFINE_RESULT__;/* FileSaver.js
@@ -7011,7 +7185,7 @@ webpackJsonp([0],[
 
 	if (typeof module !== "undefined" && module.exports) {
 	  module.exports.saveAs = saveAs;
-	} else if (("function" !== "undefined" && __webpack_require__(130) !== null) && (__webpack_require__(131) !== null)) {
+	} else if (("function" !== "undefined" && __webpack_require__(131) !== null) && (__webpack_require__(132) !== null)) {
 	  !(__WEBPACK_AMD_DEFINE_RESULT__ = function() {
 	    return saveAs;
 	  }.call(exports, __webpack_require__, exports, module), __WEBPACK_AMD_DEFINE_RESULT__ !== undefined && (module.exports = __WEBPACK_AMD_DEFINE_RESULT__));
@@ -7019,14 +7193,14 @@ webpackJsonp([0],[
 
 
 /***/ },
-/* 130 */
+/* 131 */
 /***/ function(module, exports) {
 
 	module.exports = function() { throw new Error("define cannot be used indirect"); };
 
 
 /***/ },
-/* 131 */
+/* 132 */
 /***/ function(module, exports) {
 
 	/* WEBPACK VAR INJECTION */(function(__webpack_amd_options__) {module.exports = __webpack_amd_options__;
@@ -7034,7 +7208,7 @@ webpackJsonp([0],[
 	/* WEBPACK VAR INJECTION */}.call(exports, {}))
 
 /***/ },
-/* 132 */
+/* 133 */
 /***/ function(module, exports, __webpack_require__) {
 
 	"use strict";
@@ -7055,15 +7229,15 @@ webpackJsonp([0],[
 
 	var _config2 = _interopRequireDefault(_config);
 
-	var _Point = __webpack_require__(133);
+	var _Point = __webpack_require__(134);
 
 	var _Point2 = _interopRequireDefault(_Point);
 
-	var _PointCloud = __webpack_require__(134);
+	var _PointCloud = __webpack_require__(135);
 
 	var _PointCloud2 = _interopRequireDefault(_PointCloud);
 
-	var _Util = __webpack_require__(135);
+	var _Util = __webpack_require__(136);
 
 	var _Util2 = _interopRequireDefault(_Util);
 
@@ -7250,7 +7424,7 @@ webpackJsonp([0],[
 	exports.default = PDollarRecognizer;
 
 /***/ },
-/* 133 */
+/* 134 */
 /***/ function(module, exports, __webpack_require__) {
 
 	"use strict";
@@ -7276,7 +7450,7 @@ webpackJsonp([0],[
 	exports.default = Point;
 
 /***/ },
-/* 134 */
+/* 135 */
 /***/ function(module, exports, __webpack_require__) {
 
 	"use strict";
@@ -7293,11 +7467,11 @@ webpackJsonp([0],[
 
 	var _createClass3 = _interopRequireDefault(_createClass2);
 
-	var _Point = __webpack_require__(133);
+	var _Point = __webpack_require__(134);
 
 	var _Point2 = _interopRequireDefault(_Point);
 
-	var _Util = __webpack_require__(135);
+	var _Util = __webpack_require__(136);
 
 	var _Util2 = _interopRequireDefault(_Util);
 
@@ -7412,7 +7586,7 @@ webpackJsonp([0],[
 	exports.default = PointCloud;
 
 /***/ },
-/* 135 */
+/* 136 */
 /***/ function(module, exports, __webpack_require__) {
 
 	"use strict";
@@ -7647,7 +7821,7 @@ webpackJsonp([0],[
 	exports.default = Util;
 
 /***/ },
-/* 136 */
+/* 137 */
 /***/ function(module, exports) {
 
 	"use strict";
@@ -7677,58 +7851,58 @@ webpackJsonp([0],[
 	};
 
 /***/ },
-/* 137 */
+/* 138 */
 /***/ function(module, exports) {
 
 	// removed by extract-text-webpack-plugin
 
 /***/ },
-/* 138 */,
 /* 139 */,
 /* 140 */,
-/* 141 */
+/* 141 */,
+/* 142 */
 /***/ function(module, exports, __webpack_require__) {
 
 	module.exports = __webpack_require__.p + "background.html";
 
 /***/ },
-/* 142 */
+/* 143 */
 /***/ function(module, exports, __webpack_require__) {
 
 	module.exports = __webpack_require__.p + "index.html";
 
 /***/ },
-/* 143 */
+/* 144 */
 /***/ function(module, exports) {
 
 	module.exports = "data:image/png;base64,bW9kdWxlLmV4cG9ydHMgPSBfX3dlYnBhY2tfcHVibGljX3BhdGhfXyArICIvaWNvbnMvMTI4LnBuZyI7"
 
 /***/ },
-/* 144 */
+/* 145 */
 /***/ function(module, exports) {
 
 	module.exports = "data:image/png;base64,bW9kdWxlLmV4cG9ydHMgPSBfX3dlYnBhY2tfcHVibGljX3BhdGhfXyArICIvaWNvbnMvMTYucG5nIjs="
 
 /***/ },
-/* 145 */
+/* 146 */
 /***/ function(module, exports) {
 
 	module.exports = "data:image/png;base64,bW9kdWxlLmV4cG9ydHMgPSBfX3dlYnBhY2tfcHVibGljX3BhdGhfXyArICIvaWNvbnMvMzIucG5nIjs="
 
 /***/ },
-/* 146 */
+/* 147 */
 /***/ function(module, exports) {
 
 	module.exports = "data:image/png;base64,bW9kdWxlLmV4cG9ydHMgPSBfX3dlYnBhY2tfcHVibGljX3BhdGhfXyArICIvaWNvbnMvNjQucG5nIjs="
 
 /***/ },
-/* 147 */
+/* 148 */
 /***/ function(module, exports) {
 
 	module.exports = "data:image/jpeg;base64,bW9kdWxlLmV4cG9ydHMgPSBfX3dlYnBhY2tfcHVibGljX3BhdGhfXyArICIvaWNvbnMvYmFja2dyb3VuZC5qcGciOw=="
 
 /***/ },
-/* 148 */
+/* 149 */
 /***/ function(module, exports) {
 
 	module.exports = "data:image/png;base64,bW9kdWxlLmV4cG9ydHMgPSBfX3dlYnBhY2tfcHVibGljX3BhdGhfXyArICIvaWNvbnMvaXRlbS5wbmciOw=="

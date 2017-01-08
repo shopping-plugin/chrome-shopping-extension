@@ -1,0 +1,31 @@
+{
+  "20170108xx": {
+    "status": {
+      "url": "www.example.com",
+      "filters": ["长款", "波司登"],
+      "keywords": [
+        "大衣"
+      ],
+      "whiteList": [
+        "123456",
+        "456789"
+      ],
+      "blackList": [
+        "98765",
+        "213432"
+      ]
+    },
+    "log": [
+      {
+        "timestamp": "20173321313",
+        "operation": "addWhiteListItem",
+        "content": "123456"
+      },
+      {
+        "timestamp": "20173321314",
+        "operation": "addWhiteListItem",
+        "content": "1233213"
+      }
+    ]
+  }
+}

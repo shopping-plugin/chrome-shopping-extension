@@ -1,3 +1,5 @@
+import cloudService from "./cloudService"
+
 export default class DomOperation {
     constructor()
     {
@@ -196,7 +198,7 @@ export default class DomOperation {
     filterKeyword(wordList, typeList, isNLP) {
       let filter_url = this.getFilterURL(wordList, typeList, isNLP);
       //console.debug(wordList, typeList, isNLP);
-      this.createTab(filter_url);
+      this.createTab(filter_url, true);
     }
 
     /*
@@ -316,7 +318,7 @@ export default class DomOperation {
             this.WHITE_DOM_LIST.push($('#' + cur_id));
 
     				// 新开标签页，显示该商品的商品详情
-    				this.createTab(cur_img.parentNode.href);
+    				this.createTab(cur_img.parentNode.href, false);
     			}
     		}
     	}
@@ -544,8 +546,8 @@ export default class DomOperation {
     /*
      * 与background页面通信，以实现新开标签页
      */
-    createTab(url) {
-    	chrome.runtime.sendMessage({command: "createTab", target: url}, (response) => {
+    createTab(url, active) {
+    	chrome.runtime.sendMessage({command: "createTab", target: url, active: active}, (response) => {
     		//console.log(response.result);
     	});
     }

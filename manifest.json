@@ -40,7 +40,8 @@
             "background/notecloud/http.js",
             "background/notecloud/gdapi.js",
             "background/notecloud/cloud.js",
-            "background/notecloud.js"
+            "background/notecloud.js",
+            "background/lib/underscore-min.js"
         ],
         "persistent": false
     },
