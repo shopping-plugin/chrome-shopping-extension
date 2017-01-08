@@ -167,6 +167,20 @@ var PAGESHOT_DATA_FILE = 'pageshotdata';
 
             return true;
         }
+        else if (msg.command === 'beginNewAffair'){
+            cloud.beginNewAffair(msg.data, function (err, log) {
+                if(err){
+                    sendResponse(err);
+                    console.log(err);
+                }else {
+                    sendResponse(log);
+                    console.debug(log);
+                    console.debug("beginNewAffair请求的响应已发送");
+                }
+            });
+
+            return true;
+        }
     });
 
 
