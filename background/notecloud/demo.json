@@ -2,6 +2,7 @@
   "20170108xx": {
     "status": {
       "url": "www.example.com",
+      "filters": ["长款", "波司登"],
       "keywords": [
         "大衣"
       ],

@@ -104,13 +104,18 @@ var cloud = {
         });
     }
 
-
+    /**
+     * 开始一个事务
+     * @param data
+     * @param callback
+     */
     cloud.beginNewAffair = function (data, callback) {
         cloud.doBaseWork(data, function (data, file) {
             file.affairId = {};
             var affair = file.affairId;
             affair.status = {};
             affair.status.url = data.url;//初始化url
+            affair.status.filters = [];//初始化筛选条件
             affair.status.keywords = data.keyword || [];//初始化关键词
             affair.status.whiteList = [];//初始化白名单
             affair.status.blacklist = [];//初始化黑名单
@@ -206,7 +211,7 @@ var cloud = {
     }
 
     /**
-     * 添加筛选条件
+     * 添加关键词
      * @param affairId
      * @param filters
      */
@@ -227,7 +232,7 @@ var cloud = {
     }
 
     /**
-     * 删除筛选条件
+     * 删除关键词
      * @param affairId
      * @param filters
      */
@@ -242,6 +247,85 @@ var cloud = {
                     "operation": "deleteKeyword",
                     "content": content
                 });
+            });
+            return file;
+        }, callback);
+    }
+
+
+    /**
+     * 添加筛选条件
+     * @param data
+     * @param callback
+     */
+    cloud.addFilter = function (data, callback) {
+        cloud.doBaseWork(data, function (data, file) {
+            var affair = file[data.affairId];
+            affair.status.url = data.url;
+            _.each(data.filters, function (content) {
+                affair.status.filters.push(content);
+                affair.log.push({
+                    "time": Date.now(),
+                    "operation": "addFilter",
+                    "content": content
+                });
+            });
+            return file;
+        }, callback);
+    }
+
+    /**
+     * 删除筛选条件
+     * @param data
+     * @param callback
+     */
+    cloud.deleteFilter = function (data, callback) {
+        cloud.doBaseWork(data, function (data, file) {
+            var affair = file[data.affairId];
+            affair.status.url = data.url;
+            _.each(data.filters, function (content) {
+                affair.status.filters.remove(content);
+                affair.log.push({
+                    "time": Date.now(),
+                    "operation": "deleteFilter",
+                    "content": content
+                });
+            });
+            return file;
+        }, callback);
+    }
+
+    /**
+     * 点击下一页
+     * @param data
+     * @param callback
+     */
+    cloud.nextPage = function (data, callback) {
+        cloud.doBaseWork(data, function (data, file) {
+            var affair = file[data.affairId];
+            affair.status.url = data.url;
+            affair.log.push({
+                    "time": Date.now(),
+                    "operation": "nextPage",
+                    "content": content
+                });
+            return file;
+        }, callback);
+    }
+
+    /**
+     * 点击上一页
+     * @param data
+     * @param callback
+     */
+    cloud.previousPage = function (data, callback) {
+        cloud.doBaseWork(data, function (data, file) {
+            var affair = file[data.affairId];
+            affair.status.url = data.url;
+            affair.log.push({
+                "time": Date.now(),
+                "operation": "previousPage",
+                "content": ""
             });
             return file;
         }, callback);

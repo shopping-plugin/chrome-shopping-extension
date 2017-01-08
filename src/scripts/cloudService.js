@@ -135,4 +135,76 @@ export default class CouldServce {
 
         });
     }
+
+    /**
+     * 添加筛选条件
+     * @param affairId
+     * @param filters  筛选条件数组 ["长款", "..."]
+     */
+    addFilter(affairId, filters){
+        var data={
+            "affairId": affairId,
+            "filters": filters
+        }
+        chrome.runtime.sendMessage({
+            "command": "addFilter",
+            "data": data
+        }, function (res) {
+
+        });
+    }
+
+    /**
+     * 删除筛选条件
+     * @param affairId
+     * @param filters
+     */
+    deleteFilter(affairId, filters){
+        var data={
+            "affairId": affairId,
+            "filters": filters
+        }
+        chrome.runtime.sendMessage({
+            "command": "deleteFilter",
+            "data": data
+        }, function (res) {
+
+        });
+    }
+
+    /**
+     * 点击上一页
+     * @param affairId
+     * @param url
+     */
+    nextPage(affairId, url) {
+        var data = {
+            "affairId": affairId,
+            "url": url
+        }
+        chrome.runtime.sendMessage({
+            "command": "nextPage",
+            "data": data
+        }, function (res) {
+
+        });
+    }
+
+    /**
+     * 点击下一页
+     * @param affairId
+     * @param url
+     */
+    previousPage(affairId, url) {
+        var data = {
+            "affairId": affairId,
+            "url": url
+        }
+        chrome.runtime.sendMessage({
+            "command": "previousPage",
+            "data": data
+        }, function (res) {
+
+        });
+    }
 }

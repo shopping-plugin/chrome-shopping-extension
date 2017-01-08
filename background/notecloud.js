@@ -114,6 +114,58 @@ var PAGESHOT_DATA_FILE = 'pageshotdata';
             });
 
             return true;
+        }else if (msg.command === 'addFilter'){
+            cloud.addFilter(msg.data, function (err, log) {
+                if(err){
+                    sendResponse(err);
+                    console.log(err);
+                }else {
+                    sendResponse(log);
+                    console.debug(log);
+                    console.debug("addFilter请求的响应已发送");
+                }
+            });
+
+            return true;
+        }else if (msg.command === 'deleteFilter'){
+            cloud.deleteFilter(msg.data, function (err, log) {
+                if(err){
+                    sendResponse(err);
+                    console.log(err);
+                }else {
+                    sendResponse(log);
+                    console.debug(log);
+                    console.debug("deleteFilter请求的响应已发送");
+                }
+            });
+
+            return true;
+        }else if (msg.command === 'nextPage'){
+            cloud.nextPage(msg.data, function (err, log) {
+                if(err){
+                    sendResponse(err);
+                    console.log(err);
+                }else {
+                    sendResponse(log);
+                    console.debug(log);
+                    console.debug("nextPage请求的响应已发送");
+                }
+            });
+
+            return true;
+        }else if (msg.command === 'previousPage'){
+            cloud.previousPage(msg.data, function (err, log) {
+                if(err){
+                    sendResponse(err);
+                    console.log(err);
+                }else {
+                    sendResponse(log);
+                    console.debug(log);
+                    console.debug("previousPage请求的响应已发送");
+                }
+            });
+
+            return true;
         }
     });
 
