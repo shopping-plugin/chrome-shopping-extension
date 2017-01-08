@@ -8,7 +8,7 @@ export default class InterceptionWeb {
         this.domToImage = domToImage;
     }
 
-    domToImageLikePng(dom, range)
+    async domToImageLikePng(dom, range)
     {
         const scale = 4;
         const largeDom = this.scaleDom(dom, scale);
@@ -17,52 +17,18 @@ export default class InterceptionWeb {
         // make sure all text is black
         $(cloneDom).children().children(".H").removeClass("H");
         document.body.appendChild(cloneDom);
-        return new Promise((resolve, reject) => {
-            this.domToImage.toPng(cloneDom).then((dataUrl) => {
-                cloneDom.remove();
-                let img = new Image();
-                img.src = dataUrl;
-                // $(document.body).append(img);
-                // console.log(img.complete);
-                setTimeout(() => {
-                    const result = this.clip(img, {
-                        "startX": range.startX * scale,
-                        "startY": range.startY * scale,
-                        "width": range.width * scale,
-                        "height": range.height * scale
-                    });
-                    resolve(result);
-                }, 500);
-            }).catch((error) => {
-                reject(error);
-            });
+        const dataUrl = await this.domToImage.toPng(cloneDom);
+        let img = new Image();
+        img.src = dataUrl;
+        await this.waitImageLoad(img);
+        const result = this.clip(img, {
+            "startX": range.startX * scale,
+            "startY": range.startY * scale,
+            "width": range.width * scale,
+            "height": range.height * scale
         });
-    }
-
-    domToImageLikeJpeg(dom, range)
-    {
-        return new Promise((resolve, reject) => {
-            this.domToImage.toJpeg(dom, { quality: 0.95 }).then((dataUrl) => {
-                const img = new Image();
-                img.src = dataUrl;
-                resolve(img);
-            }).catch((error) => {
-                reject(error);
-            });
-        });
-    }
-
-    domToImageLikeSvg(dom, range)
-    {
-        return new Promise((resolve, reject) => {
-            this.domToImage.toSvg(dom).then((dataUrl) => {
-                const img = new Image();
-                img.src = dataUrl;
-                resolve(img);
-            }).catch((error) => {
-                reject(error);
-            });
-        });
+        //$(document.body).append(result);
+        return result;
     }
 
     clip(dom, range)
@@ -80,11 +46,21 @@ export default class InterceptionWeb {
         return image;
     }
 
-    async waitImageLoad(img)
+    waitImageLoad(img)
     {
         return new Promise((resolve, reject) => {
-            if (img.complete && $(img).width && $(img))
-
+            let isReady = false;
+            const timer = setInterval(() => {
+                if (img.width > 0 && !isReady)
+                {
+                    isReady = true;
+                    resolve();
+                }
+                if (isReady)
+                {
+                    window.clearInterval(timer);
+                }
+            }, 100);
         });
     }
 

@@ -247,6 +247,8 @@ export default class Recognize
             const parentLocation = this.capture.getPositionOfElement(item.element);
             const offsetLeftStr = window.getComputedStyle(item.element, null).getPropertyValue('margin-left');
             const offsetTopStr = window.getComputedStyle(item.element, null).getPropertyValue('margin-top');
+            const offsetRightStr = window.getComputedStyle(item.element, null).getPropertyValue('margin-right');
+            const offsetBottomStr = window.getComputedStyle(item.element, null).getPropertyValue('margin-bottom');
             const range = domItem.range;
             const offsetX = parentLocation.left; //+ parseInt(offsetLeftStr.substring(0, offsetLeftStr.length - 2)));
             const offsetY = parentLocation.top; // + parseInt(offsetTopStr.substring(0, offsetTopStr.length - 2)));
@@ -257,13 +259,16 @@ export default class Recognize
             range.startX = Math.max(range.startX, 0);
             range.startY = Math.max(range.startY, 0);
 
-            const extractText = await this.labelExtract(item.element, range);
-            const itemTitle = item.element.children[0].text;
-            // const textData = await $.ajax({
-            //     url: "http://192.168.1.108:8079/api/language/extractText",
-            //     data: { "title": itemTitle, "extractText": extractText }
-            // });
+            const domRange = {
+                width: parentLocation.width,
+                height: parentLocation.height,
+                startX: 0,
+                startY: 0
+            };
 
+            const fixedRange = this.capture.prefixRange(domRange, range, 0.5, 2, "column");
+            const extractText = await this.labelExtract(item.element, fixedRange);
+            const itemTitle = item.element.children[0].text;
             return {
                 "rootDom": item.rootElement,
                 "titleDom": item.element,

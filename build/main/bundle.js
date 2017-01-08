@@ -466,7 +466,7 @@ webpackJsonp([0],[
 	                                _context3.next = 2;
 	                                return Promise.all(titleDoms.map(function () {
 	                                    var _ref3 = (0, _asyncToGenerator3.default)(_regenerator2.default.mark(function _callee2(domItem) {
-	                                        var item, parentLocation, offsetLeftStr, offsetTopStr, range, offsetX, offsetY, extractText, itemTitle;
+	                                        var item, parentLocation, offsetLeftStr, offsetTopStr, offsetRightStr, offsetBottomStr, range, offsetX, offsetY, domRange, fixedRange, extractText, itemTitle;
 	                                        return _regenerator2.default.wrap(function _callee2$(_context2) {
 	                                            while (1) {
 	                                                switch (_context2.prev = _context2.next) {
@@ -475,6 +475,8 @@ webpackJsonp([0],[
 	                                                        parentLocation = _this4.capture.getPositionOfElement(item.element);
 	                                                        offsetLeftStr = window.getComputedStyle(item.element, null).getPropertyValue('margin-left');
 	                                                        offsetTopStr = window.getComputedStyle(item.element, null).getPropertyValue('margin-top');
+	                                                        offsetRightStr = window.getComputedStyle(item.element, null).getPropertyValue('margin-right');
+	                                                        offsetBottomStr = window.getComputedStyle(item.element, null).getPropertyValue('margin-bottom');
 	                                                        range = domItem.range;
 	                                                        offsetX = parentLocation.left; //+ parseInt(offsetLeftStr.substring(0, offsetLeftStr.length - 2)));
 
@@ -487,17 +489,19 @@ webpackJsonp([0],[
 	                                                        range.startX = Math.max(range.startX, 0);
 	                                                        range.startY = Math.max(range.startY, 0);
 
-	                                                        _context2.next = 15;
-	                                                        return _this4.labelExtract(item.element, range);
+	                                                        domRange = {
+	                                                            width: parentLocation.width,
+	                                                            height: parentLocation.height,
+	                                                            startX: 0,
+	                                                            startY: 0
+	                                                        };
+	                                                        fixedRange = _this4.capture.prefixRange(domRange, range, 0.5, 2, "column");
+	                                                        _context2.next = 19;
+	                                                        return _this4.labelExtract(item.element, fixedRange);
 
-	                                                    case 15:
+	                                                    case 19:
 	                                                        extractText = _context2.sent;
 	                                                        itemTitle = item.element.children[0].text;
-	                                                        // const textData = await $.ajax({
-	                                                        //     url: "http://192.168.1.108:8079/api/language/extractText",
-	                                                        //     data: { "title": itemTitle, "extractText": extractText }
-	                                                        // });
-
 	                                                        return _context2.abrupt("return", {
 	                                                            "rootDom": item.rootElement,
 	                                                            "titleDom": item.element,
@@ -505,7 +509,7 @@ webpackJsonp([0],[
 	                                                            "title": extractText.text
 	                                                        });
 
-	                                                    case 18:
+	                                                    case 22:
 	                                                    case "end":
 	                                                        return _context2.stop();
 	                                                }
@@ -3411,8 +3415,90 @@ webpackJsonp([0],[
 	                left: x,
 	                right: x + width,
 	                top: y,
-	                bottom: y + height
+	                bottom: y + height,
+	                width: width,
+	                height: height
 	            };
+	        }
+	        /*
+	        domRange and pointRange must be startX, startY, width, height
+	        errorTolerance 表示误差范围，
+	        splitNumber 表示分割数目
+	        direction 表示分割方向，暂支持 “column”， “row”
+	        return false 表示参数错误
+	        */
+
+	    }, {
+	        key: "prefixRange",
+	        value: function prefixRange(domRange, pointRange) {
+	            var errorTolerance = arguments.length > 2 && arguments[2] !== undefined ? arguments[2] : 0.3;
+	            var splitNumber = arguments.length > 3 && arguments[3] !== undefined ? arguments[3] : 2;
+	            var direction = arguments.length > 4 && arguments[4] !== undefined ? arguments[4] : "column";
+
+	            if (errorTolerance < 0 || splitNumber < 1 || !domRange || !pointRange) {
+	                return false;
+	            }
+	            var result = null;
+	            var unitLength = {
+	                width: domRange.width / splitNumber,
+	                height: domRange.height / splitNumber
+	            };
+
+	            var startBlock = -1;
+	            var endBlock = splitNumber;
+	            var offsetY = unitLength.height * (1 - errorTolerance);
+	            var offsetX = unitLength.width * (1 - errorTolerance);
+
+	            switch (direction) {
+	                case "column":
+	                    for (var index = 0; index < splitNumber; index++) {
+	                        if (pointRange.startY < offsetY + index * unitLength.height) {
+	                            startBlock = index;
+	                            break;
+	                        }
+	                    }
+	                    for (var _index = 0; _index < splitNumber; _index++) {
+	                        if (pointRange.startY + pointRange.height > unitLength.height * errorTolerance + _index * unitLength.height) {
+	                            endBlock = _index;
+	                        }
+	                    }
+
+	                    if (startBlock < 0) {
+	                        return false;
+	                    }
+	                    return {
+	                        startX: pointRange.startX,
+	                        startY: startBlock * unitLength.height,
+	                        width: pointRange.width,
+	                        height: (endBlock - startBlock + 1) * unitLength.height
+	                    };
+
+	                case "row":
+	                    for (var _index2 = 0; _index2 < splitNumber; _index2++) {
+	                        if (pointRange.startX < offsetX + _index2 * unitLength.width) {
+	                            startBlock = _index2;
+	                            break;
+	                        }
+	                    }
+	                    for (var _index3 = 0; _index3 < splitNumber; _index3++) {
+	                        if (pointRange.startX + pointRange.width > unitLength.width * errorTolerance + _index3 * unitLength.width) {
+	                            startBlock = _index3;
+	                        }
+	                    }
+
+	                    if (startBlock < 0) {
+	                        return false;
+	                    }
+	                    return {
+	                        startX: startBlock * unitLength.width,
+	                        startY: pointRange.startY,
+	                        width: (endBlock - startBlock + 1) * unitLength.width,
+	                        height: pointRange.height
+	                    };
+
+	                default:
+	                    return false;
+	            }
 	        }
 	    }]);
 	    return Capture;
@@ -5883,67 +5969,57 @@ webpackJsonp([0],[
 
 	    (0, _createClass3.default)(InterceptionWeb, [{
 	        key: "domToImageLikePng",
-	        value: function domToImageLikePng(dom, range) {
-	            var _this = this;
+	        value: function () {
+	            var _ref = (0, _asyncToGenerator3.default)(_regenerator2.default.mark(function _callee(dom, range) {
+	                var scale, largeDom, cloneDom, offset, dataUrl, img, result;
+	                return _regenerator2.default.wrap(function _callee$(_context) {
+	                    while (1) {
+	                        switch (_context.prev = _context.next) {
+	                            case 0:
+	                                scale = 4;
+	                                largeDom = this.scaleDom(dom, scale);
+	                                cloneDom = largeDom.dom;
+	                                offset = largeDom.offset;
+	                                // make sure all text is black
 
-	            var scale = 4;
-	            var largeDom = this.scaleDom(dom, scale);
-	            var cloneDom = largeDom.dom;
-	            var offset = largeDom.offset;
-	            // make sure all text is black
-	            $(cloneDom).children().children(".H").removeClass("H");
-	            document.body.appendChild(cloneDom);
-	            return new Promise(function (resolve, reject) {
-	                _this.domToImage.toPng(cloneDom).then(function (dataUrl) {
-	                    cloneDom.remove();
-	                    var img = new Image();
-	                    img.src = dataUrl;
-	                    $(document.body).append(img);
-	                    console.log(img.complete);
-	                    setTimeout(function () {
-	                        var result = _this.clip(img, {
-	                            "startX": range.startX * scale,
-	                            "startY": range.startY * scale,
-	                            "width": range.width * scale,
-	                            "height": range.height * scale
-	                        });
-	                        resolve(result);
-	                    }, 500);
-	                }).catch(function (error) {
-	                    reject(error);
-	                });
-	            });
-	        }
-	    }, {
-	        key: "domToImageLikeJpeg",
-	        value: function domToImageLikeJpeg(dom, range) {
-	            var _this2 = this;
+	                                $(cloneDom).children().children(".H").removeClass("H");
+	                                document.body.appendChild(cloneDom);
+	                                _context.next = 8;
+	                                return this.domToImage.toPng(cloneDom);
 
-	            return new Promise(function (resolve, reject) {
-	                _this2.domToImage.toJpeg(dom, { quality: 0.95 }).then(function (dataUrl) {
-	                    var img = new Image();
-	                    img.src = dataUrl;
-	                    resolve(img);
-	                }).catch(function (error) {
-	                    reject(error);
-	                });
-	            });
-	        }
-	    }, {
-	        key: "domToImageLikeSvg",
-	        value: function domToImageLikeSvg(dom, range) {
-	            var _this3 = this;
+	                            case 8:
+	                                dataUrl = _context.sent;
+	                                img = new Image();
 
-	            return new Promise(function (resolve, reject) {
-	                _this3.domToImage.toSvg(dom).then(function (dataUrl) {
-	                    var img = new Image();
-	                    img.src = dataUrl;
-	                    resolve(img);
-	                }).catch(function (error) {
-	                    reject(error);
-	                });
-	            });
-	        }
+	                                img.src = dataUrl;
+	                                _context.next = 13;
+	                                return this.waitImageLoad(img);
+
+	                            case 13:
+	                                result = this.clip(img, {
+	                                    "startX": range.startX * scale,
+	                                    "startY": range.startY * scale,
+	                                    "width": range.width * scale,
+	                                    "height": range.height * scale
+	                                });
+	                                //$(document.body).append(result);
+
+	                                return _context.abrupt("return", result);
+
+	                            case 15:
+	                            case "end":
+	                                return _context.stop();
+	                        }
+	                    }
+	                }, _callee, this);
+	            }));
+
+	            function domToImageLikePng(_x, _x2) {
+	                return _ref.apply(this, arguments);
+	            }
+
+	            return domToImageLikePng;
+	        }()
 	    }, {
 	        key: "clip",
 	        value: function clip(dom, range) {
@@ -5957,25 +6033,20 @@ webpackJsonp([0],[
 	        }
 	    }, {
 	        key: "waitImageLoad",
-	        value: function () {
-	            var _ref = (0, _asyncToGenerator3.default)(_regenerator2.default.mark(function _callee(img) {
-	                return _regenerator2.default.wrap(function _callee$(_context) {
-	                    while (1) {
-	                        switch (_context.prev = _context.next) {
-	                            case 0:
-	                            case "end":
-	                                return _context.stop();
-	                        }
+	        value: function waitImageLoad(img) {
+	            return new Promise(function (resolve, reject) {
+	                var isReady = false;
+	                var timer = setInterval(function () {
+	                    if (img.width > 0 && !isReady) {
+	                        isReady = true;
+	                        resolve();
 	                    }
-	                }, _callee, this);
-	            }));
-
-	            function waitImageLoad(_x) {
-	                return _ref.apply(this, arguments);
-	            }
-
-	            return waitImageLoad;
-	        }()
+	                    if (isReady) {
+	                        window.clearInterval(timer);
+	                    }
+	                }, 100);
+	            });
+	        }
 	    }, {
 	        key: "scaleDom",
 	        value: function scaleDom(dom, scale) {
