@@ -122,12 +122,6 @@ var cloud = {
             affair.log = [];//初始化日志列表
             return file;
         }, callback);
-
-
-        file.affairId = {};
-        var affair = file.affairId;
-        affair.status = initInfo;
-        affair.log = [];//初始化日志列表
     }
 
     /**
