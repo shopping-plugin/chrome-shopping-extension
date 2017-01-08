@@ -5919,58 +5919,29 @@ webpackJsonp([0],[
 /***/ function(module, exports) {
 
 	module.exports = {
-		"_args": [
-			[
-				{
-					"raw": "tesseract.js@^1.0.10",
-					"scope": null,
-					"escapedName": "tesseract.js",
-					"name": "tesseract.js",
-					"rawSpec": "^1.0.10",
-					"spec": ">=1.0.10 <2.0.0",
-					"type": "range"
-				},
-				"/Users/yef/codes/chrome-plugin/chrome-shopping-extension"
-			]
-		],
-		"_from": "tesseract.js@>=1.0.10 <2.0.0",
-		"_id": "tesseract.js@1.0.10",
-		"_inCache": true,
-		"_location": "/tesseract.js",
-		"_nodeVersion": "6.7.0",
-		"_npmOperationalInternal": {
-			"host": "packages-12-west.internal.npmjs.com",
-			"tmp": "tmp/tesseract.js-1.0.10.tgz_1476823577978_0.5278713656589389"
+		"name": "tesseract.js",
+		"version": "1.0.10",
+		"description": "Pure Javascript Multilingual OCR",
+		"main": "src/index.js",
+		"scripts": {
+			"test": "echo \"Error: no test specified\" & exit 1",
+			"start": "watchify src/index.js  -t [ envify --NODE_ENV development ] -t [ babelify --presets [ es2015 ] ] -o dist/tesseract.dev.js --standalone Tesseract & watchify src/browser/worker.js  -t [ envify --NODE_ENV development ] -t [ babelify --presets [ es2015 ] ] -o dist/worker.dev.js & http-server -p 7355",
+			"build": "browserify src/index.js -t [ babelify --presets [ es2015 ] ] -o dist/tesseract.js --standalone Tesseract && browserify src/browser/worker.js -t [ babelify --presets [ es2015 ] ] -o dist/worker.js",
+			"release": "npm run build && git commit -am 'new release' && git push && git tag `jq -r '.version' package.json` && git push origin --tags && npm publish"
 		},
-		"_npmUser": {
-			"name": "antimatter15",
-			"email": "antimatter15@gmail.com"
-		},
-		"_npmVersion": "3.10.8",
-		"_phantomChildren": {},
-		"_requested": {
-			"raw": "tesseract.js@^1.0.10",
-			"scope": null,
-			"escapedName": "tesseract.js",
-			"name": "tesseract.js",
-			"rawSpec": "^1.0.10",
-			"spec": ">=1.0.10 <2.0.0",
-			"type": "range"
-		},
-		"_requiredBy": [
-			"#DEV:/"
-		],
-		"_resolved": "https://registry.npmjs.org/tesseract.js/-/tesseract.js-1.0.10.tgz",
-		"_shasum": "e11a96ae76147939d9218f88e287fb69414b1e5d",
-		"_shrinkwrap": null,
-		"_spec": "tesseract.js@^1.0.10",
-		"_where": "/Users/yef/codes/chrome-plugin/chrome-shopping-extension",
-		"author": "",
 		"browser": {
 			"./src/node/index.js": "./src/browser/index.js"
 		},
-		"bugs": {
-			"url": "https://github.com/naptha/tesseract.js/issues"
+		"author": "",
+		"license": "Apache-2.0",
+		"devDependencies": {
+			"babel-preset-es2015": "^6.16.0",
+			"babelify": "^7.3.0",
+			"browserify": "^13.1.0",
+			"envify": "^3.4.1",
+			"http-server": "^0.9.0",
+			"pako": "^1.0.3",
+			"watchify": "^3.7.0"
 		},
 		"dependencies": {
 			"file-type": "^3.8.0",
@@ -5982,25 +5953,28 @@ webpackJsonp([0],[
 			"png.js": "^0.2.1",
 			"tesseract.js-core": "^1.0.2"
 		},
-		"description": "Pure Javascript Multilingual OCR",
-		"devDependencies": {
-			"babel-preset-es2015": "^6.16.0",
-			"babelify": "^7.3.0",
-			"browserify": "^13.1.0",
-			"envify": "^3.4.1",
-			"http-server": "^0.9.0",
-			"pako": "^1.0.3",
-			"watchify": "^3.7.0"
+		"repository": {
+			"type": "git",
+			"url": "git+https://github.com/naptha/tesseract.js.git"
 		},
-		"directories": {},
+		"bugs": {
+			"url": "https://github.com/naptha/tesseract.js/issues"
+		},
+		"homepage": "https://github.com/naptha/tesseract.js",
+		"gitHead": "fc15b0ef43cbf2d8729f8db2ef06a16b2497a16e",
+		"_id": "tesseract.js@1.0.10",
+		"_shasum": "e11a96ae76147939d9218f88e287fb69414b1e5d",
+		"_from": "tesseract.js@>=1.0.10 <2.0.0",
+		"_npmVersion": "3.10.8",
+		"_nodeVersion": "6.7.0",
+		"_npmUser": {
+			"name": "antimatter15",
+			"email": "antimatter15@gmail.com"
+		},
 		"dist": {
 			"shasum": "e11a96ae76147939d9218f88e287fb69414b1e5d",
 			"tarball": "https://registry.npmjs.org/tesseract.js/-/tesseract.js-1.0.10.tgz"
 		},
-		"gitHead": "fc15b0ef43cbf2d8729f8db2ef06a16b2497a16e",
-		"homepage": "https://github.com/naptha/tesseract.js",
-		"license": "Apache-2.0",
-		"main": "src/index.js",
 		"maintainers": [
 			{
 				"name": "antimatter15",
@@ -6011,20 +5985,12 @@ webpackJsonp([0],[
 				"email": "guillermo@cdbzb.com"
 			}
 		],
-		"name": "tesseract.js",
-		"optionalDependencies": {},
-		"readme": "ERROR: No README data found!",
-		"repository": {
-			"type": "git",
-			"url": "git+https://github.com/naptha/tesseract.js.git"
+		"_npmOperationalInternal": {
+			"host": "packages-12-west.internal.npmjs.com",
+			"tmp": "tmp/tesseract.js-1.0.10.tgz_1476823577978_0.5278713656589389"
 		},
-		"scripts": {
-			"build": "browserify src/index.js -t [ babelify --presets [ es2015 ] ] -o dist/tesseract.js --standalone Tesseract && browserify src/browser/worker.js -t [ babelify --presets [ es2015 ] ] -o dist/worker.js",
-			"release": "npm run build && git commit -am 'new release' && git push && git tag `jq -r '.version' package.json` && git push origin --tags && npm publish",
-			"start": "watchify src/index.js  -t [ envify --NODE_ENV development ] -t [ babelify --presets [ es2015 ] ] -o dist/tesseract.dev.js --standalone Tesseract & watchify src/browser/worker.js  -t [ envify --NODE_ENV development ] -t [ babelify --presets [ es2015 ] ] -o dist/worker.dev.js & http-server -p 7355",
-			"test": "echo \"Error: no test specified\" & exit 1"
-		},
-		"version": "1.0.10"
+		"directories": {},
+		"_resolved": "https://registry.npmjs.org/tesseract.js/-/tesseract.js-1.0.10.tgz"
 	};
 
 /***/ },

@@ -109,7 +109,7 @@ var cloud = {
      */
     cloud.beginNewAffair = function (data, callback) {
         cloud.doBaseWork(data, function (data, file) {
-            file.affairId = {};
+            file[data.affairId] = {};
             var affair = file.affairId;
             affair.status = {};
             affair.status.url = data.url;//初始化url
