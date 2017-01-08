@@ -1,5 +1,5 @@
 body{
-    width: 25px;
+    width: 320px;
 }
 
 .icon{
@@ -8,11 +8,26 @@ body{
 }
 
 .popup-btn{
-    margin-left: 5px;
-    margin-right: 5px;
+    margin: 10px;
     outline: 0;
 }
 
 .disabled{
     -webkit-filter: grayscale(100%);
+}
+
+#brush_div {
+  margin: 10px;
+}
+
+#keyword_div {
+  width: 300px;
+  margin: 10px;
+}
+
+#search_btn {
+  margin-top: 5px;
+  margin-bottom: 5px;
+  margin-left: 120px;
+  text-align: center;
 }

@@ -3,12 +3,25 @@
 <head>
     <meta charset="UTF-8">
     <link rel="stylesheet" href="css/popup.css">
+    <link rel="stylesheet" href="../lib/bootstrap.min.css">
+    <link rel="stylesheet" href="../lib/bootstrap-tagsinput.css">
 </head>
 <body>
 
-<a id="brush" class="popup-btn" href="#"><img class="icon" src="../resources/pencil.png"></img></a>
+<div id="brush_div">
+  开启/关闭画布： <a id="brush" class="popup-btn" href="#"><img class="icon" src="../resources/pencil.png"></img></a>
+</div>
+
+<div id="keyword_div">
+  关键字：<input type="text" id="keyword" />
+  <button type="button" class="btn btn-info" id="search_btn">确定</button>
+</div>
 
 <script src="../lib/jquery-2.1.4.min.js"></script>
+<script src="../lib/bootstrap-tagsinput.min.js"></script>
+<script src="../lib/typeahead.bundle.min.js"></script>
+<script src="../lib/bloodhound.min.js"></script>
+<script src="../lib/typeahead.jquery.min.js"></script>
 <script src="popup.js"></script>
 </body>
 </html>

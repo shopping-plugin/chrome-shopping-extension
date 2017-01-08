@@ -29,6 +29,10 @@ webpackJsonp([0],[
 
 	var _setting2 = _interopRequireDefault(_setting);
 
+	var _Capture = __webpack_require__(85);
+
+	var _Capture2 = _interopRequireDefault(_Capture);
+
 	function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
 	var state = {
@@ -46,6 +50,23 @@ webpackJsonp([0],[
 	    if (request.command == "buttonStatus") {
 	        sendResponse({ brush: recognizeInstance.markingDomState });
 	    }
+	    if (request.command == "url_change") {
+	        recognizeInstance.domOperation.handleURLChange(request.url);
+
+	        setTimeout(function () {
+	            var webConfig = getWebConfig();
+
+	            if (!state.webType) {
+	                console.log("this webpage is not  a matched target webpage. ");
+	            } else {
+	                recognizeInstance.capture = new _Capture2.default({
+	                    "webConfig": webConfig
+	                });;
+	                recognizeInstance.webConfig = webConfig;
+	                recognizeInstance._init();
+	            }
+	        }, 300);
+	    }
 	});
 
 	$(document).keydown(function (event) {
@@ -62,16 +83,7 @@ webpackJsonp([0],[
 
 	$(document).ready(function () {
 	    setTimeout(function () {
-	        var webConfig = null;
-	        for (var key in _setting2.default) {
-	            var dom = $(_setting2.default[key].identification);
-	            if (dom && dom.length === 1) {
-	                // dom 存在
-	                state.webType = key;
-	                webConfig = _setting2.default[key].webConfig;
-	                break;
-	            }
-	        }
+	        var webConfig = getWebConfig();
 
 	        if (!state.webType) {
 	            console.log("this webpage is not  a matched target webpage. ");
@@ -83,6 +95,21 @@ webpackJsonp([0],[
 	        }
 	    }, 300);
 	});
+
+	function getWebConfig() {
+	    var webConfig = null;
+	    for (var key in _setting2.default) {
+	        var dom = $(_setting2.default[key].identification);
+	        if (dom && dom.length === 1) {
+	            // dom 存在
+	            state.webType = key;
+	            webConfig = _setting2.default[key].webConfig;
+	            break;
+	        }
+	    }
+
+	    return webConfig;
+	}
 	/* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(3)))
 
 /***/ },
@@ -4546,15 +4573,19 @@ webpackJsonp([0],[
 	    this.next_page_count = 0;
 	    this.next_page_url = "";
 
+	    this.KEYWORD_LIST = [];
+	    this.KEYWORD_TYPE_LIST = [];
+
 	    setTimeout(function () {
-	      _this.cur_page_url = $(document)[0].URL;
-	      _this.initNextPageData();
+	      _this.initKeywordList();
+	      _this.initPageData();
 	      _this.getNextPage();
 	    }, 1000);
 
 	    // 存储过往操作的黑白名单，在填补空白时对商品进行过滤
-	    this.WHITE_LIST = [];
-	    this.BLACK_LIST = [];
+	    this.WHITE_ID_LIST = [];
+	    this.BLACK_ID_LIST = [];
+	    this.WHITE_DOM_LIST = [];
 
 	    // 不同的笔迹类型
 	    this.SIGN_WHITE = "SIGN_WHITE"; // 大圈
@@ -4565,29 +4596,57 @@ webpackJsonp([0],[
 	    // 接收background发送过来的分词结果
 	    chrome.runtime.onMessage.addListener(function (request, sender, sendResponse) {
 	      if (request.command == "nlp_result") {
-	        console.debug(request.result);
-
-	        if (!request.result.nlp_word_response == undefined) {
-	          _this.nlp_result = request.result.nlp_word_response.wordresult;
+	        if (request.result.success == true) {
+	          _this.nlp_result = _this.getWordListFromNLPResult(request.result.data);
+	        } else {
+	          console.debug(request.result.errMsg);
 	        }
+
+	        console.debug(_this.nlp_result);
+	      }
+	      if (request.command == "keyword") {
+	        // console.debug(this.KEYWORD_LIST);
+	        // console.debug(this.KEYWORD_TYPE_LIST);
+
+	        sendResponse({ wordList: _this.KEYWORD_LIST, typeList: _this.KEYWORD_TYPE_LIST, cur_url: $(document)[0].URL });
 	      }
 	    });
 	  }
 
-	  /*
-	   * 根据当前页数初始化下一页数据
-	   * 包括下一页的页数，下一页的URL
-	   */
-
-
 	  (0, _createClass3.default)(DomOperation, [{
-	    key: "initNextPageData",
-	    value: function initNextPageData() {
+	    key: "initKeywordList",
+	    value: function initKeywordList() {
+	      var q = $(document)[0].URL.match(/[&?]q=([^& ]*)/)[1];
+	      var q_array = this.getCharFromUtf8(q).split("+");
+
+	      for (var i = 0; i < q_array.length; i++) {
+	        this.KEYWORD_LIST.push(q_array[i]);
+
+	        if (q_array[i].indexOf("-") == -1) {
+	          this.KEYWORD_TYPE_LIST.push("+");
+	        } else {
+	          this.KEYWORD_TYPE_LIST.push("-");
+	        }
+	      }
+	    }
+
+	    /*
+	     * 根据当前页数初始化下一页数据
+	     * 包括下一页的页数，下一页的URL
+	     */
+
+	  }, {
+	    key: "initPageData",
+	    value: function initPageData() {
 	      var next_page = $('ul.items li.item.active').next();
 	      var a = next_page.children();
 
 	      this.next_page_count = a[0].innerText;
 	      this.next_page_url = this.getNextPageURL();
+
+	      if ($('#iframe_div').length != 0) {
+	        $('#iframe_div').remove();
+	      }
 
 	      var iframe_div = document.createElement('div');
 	      iframe_div.id = "iframe_div";
@@ -4602,7 +4661,7 @@ webpackJsonp([0],[
 	  }, {
 	    key: "getNextPageURL",
 	    value: function getNextPageURL() {
-	      var cur_url = this.cur_page_url;
+	      var cur_url = $(document)[0].URL;
 	      var s_para = cur_url.match(/&s=([^& ]*)/);
 
 	      var s_value = this.data_value * (this.next_page_count - 1);
@@ -4626,8 +4685,6 @@ webpackJsonp([0],[
 	        $('#next_page_iframe').remove();
 	      }
 
-	      this.next_page_dom_list = "";
-
 	      var iframe = document.createElement('iframe');
 	      iframe.id = "next_page_iframe";
 	      iframe.name = "next_page_iframe";
@@ -4640,7 +4697,7 @@ webpackJsonp([0],[
 
 	        iframe_window.find('html body').animate({
 	          scrollTop: $(iframe_window).height()
-	        }, 2000, function () {
+	        }, 3000, function () {
 	          // Animation complete
 	          var item_list = void 0;
 	          if (_this2.getPageStyle() == _this2.GRID_STYLE) {
@@ -4653,8 +4710,36 @@ webpackJsonp([0],[
 	          _this2.item_index = 0;
 	          _this2.next_page_count++;
 	          _this2.next_page_url = _this2.getNextPageURL();
+
+	          //console.debug(this.next_page_dom_list);
 	        });
 	      }, 3000);
+	    }
+
+	    /*
+	     * 从服务器返回的分词结果中提取出词组
+	     */
+
+	  }, {
+	    key: "getWordListFromNLPResult",
+	    value: function getWordListFromNLPResult(nlp_result) {
+	      var wordList = [];
+	      var nlp_word = [];
+
+	      for (var i = 0; i < nlp_result.length; i++) {
+	        var result = nlp_result[i];
+
+	        if (result.word == "-") {
+	          wordList.push(nlp_word.join("\t"));
+	          nlp_word = [];
+	        } else {
+	          nlp_word.push(result.word);
+	        }
+	      }
+
+	      wordList.push(nlp_word.join("\t"));
+
+	      return wordList;
 	    }
 
 	    /*
@@ -4674,15 +4759,14 @@ webpackJsonp([0],[
 
 	      setTimeout(function () {
 	        // 未获取到分词结果或分词失败，则使用未分词的word进行过滤
-	        if (_this3.nlp_result == "" || _this3.nlp_result.top_status == false) {
+	        if (_this3.nlp_result == "") {
 	          _this3.filterKeyword(wordList, typeList, false);
 	        }
 	        // 使用分词结果过滤
 	        else {
-	            wordList = _this3.nlp_result.top_result.split("-");
-	            _this3.filterKeyword(wordList, typeList, true);
+	            _this3.filterKeyword(_this3.nlp_result, typeList, true);
 	          }
-	      }, 1000);
+	      }, 2000);
 	    }
 
 	    /*
@@ -4693,7 +4777,8 @@ webpackJsonp([0],[
 	    key: "filterKeyword",
 	    value: function filterKeyword(wordList, typeList, isNLP) {
 	      var filter_url = this.getFilterURL(wordList, typeList, isNLP);
-	      this.loadFilterPage(filter_url);
+	      //console.debug(wordList, typeList, isNLP);
+	      this.createTab(filter_url);
 	    }
 
 	    /*
@@ -4703,7 +4788,7 @@ webpackJsonp([0],[
 	  }, {
 	    key: "getFilterURL",
 	    value: function getFilterURL(wordList, typeList, isNLP) {
-	      var cur_url = this.cur_page_url;
+	      var cur_url = $(document)[0].URL;
 	      var q_para = cur_url.match(/[&?]q=([^& ]*)/)[0];
 
 	      for (var i = 0; i < wordList.length; i++) {
@@ -4712,7 +4797,9 @@ webpackJsonp([0],[
 	        if (isNLP) {
 	          var nlp_array = wordList[i].split("\t");
 	          for (var j = 0; j < nlp_array.length; j++) {
-	            if (nlp_array[j] == "") {
+	            var nlp_word = nlp_array[j].replace(/(^\s*)|(\s*$)/g, "");
+
+	            if (nlp_word.length == 0) {
 	              continue;
 	            }
 
@@ -4720,16 +4807,34 @@ webpackJsonp([0],[
 
 	            if (typeList[i] == "-") {
 	              keyword += "-";
+	              this.KEYWORD_LIST.push("-" + nlp_word);
+	            } else {
+	              this.KEYWORD_LIST.push(nlp_word);
 	            }
 
-	            keyword += encodeURI(nlp_array[j]);
+	            keyword += encodeURI(nlp_word);
+
+	            this.KEYWORD_TYPE_LIST.push(typeList[i]);
 	          }
 	        } else {
 	          keyword += "+";
+
+	          var w = wordList[i].replace(/(^\s*)|(\s*$)/g, "");
+
+	          if (w.length == 0) {
+	            continue;
+	          }
+
 	          if (typeList[i] == "-") {
 	            keyword += "-";
+	            this.KEYWORD_LIST.push("-" + w);
+	          } else {
+	            this.KEYWORD_LIST.push(w);
 	          }
-	          keyword += encodeURI(wordList[i]);
+
+	          keyword += encodeURI(w);
+
+	          this.KEYWORD_TYPE_LIST.push(typeList[i]);
 	        }
 
 	        q_para += keyword;
@@ -4738,113 +4843,6 @@ webpackJsonp([0],[
 	      var new_url = cur_url.replace(/[&?]q=([^& ]*)/, q_para);
 
 	      return new_url;
-	    }
-
-	    /*
-	     * 根据构造出的URL加载增加关键字后的新页面内容
-	     */
-
-	  }, {
-	    key: "loadFilterPage",
-	    value: function loadFilterPage(filter_url) {
-	      var _this4 = this;
-
-	      if ($('#filter_page_iframe').length != 0) {
-	        $('#filter_page_iframe').remove();
-	      }
-
-	      var iframe = document.createElement('iframe');
-	      iframe.id = "filter_page_iframe";
-	      iframe.name = "filter_page_iframe";
-	      iframe.src = filter_url;
-	      iframe.width = $(document).width();
-	      $('#iframe_div').append(iframe);
-
-	      setTimeout(function () {
-	        _this4.replaceDom();
-	        _this4.cur_page_url = filter_url;
-
-	        _this4.next_page_count = 2;
-	        _this4.next_page_url = _this4.getNextPageURL();
-	        _this4.getNextPage();
-	      }, 3000);
-	    }
-
-	    /*
-	     * 根据重新过滤得到的结果替换当前页面商品
-	     * 保留白名单
-	     */
-
-	  }, {
-	    key: "replaceDom",
-	    value: function replaceDom() {
-	      var _this5 = this;
-
-	      var iframe_window = $(window.frames["filter_page_iframe"].document);
-
-	      iframe_window.find('html body').animate({
-	        scrollTop: $(iframe_window).height()
-	      }, 3000, function () {
-	        var new_item_list = void 0;
-	        var page_style = _this5.getPageStyle();
-
-	        if (page_style == _this5.GRID_STYLE) {
-	          $(".item.activity.activity-tpl-theme").remove();
-	          new_item_list = iframe_window.find("div.grid.g-clearfix").children().eq(0).children();
-
-	          var prev_item_list = $('div.item.J_MouserOnverReq');
-	          for (var i = 0; i < prev_item_list.length; i++) {
-	            var item = prev_item_list.eq(i);
-	            // 跳过白名单商品
-	            if (!item.hasClass("white")) {
-	              item.remove();
-	            }
-	          }
-
-	          for (var _i = 0; _i < new_item_list.length; _i++) {
-	            var new_item = new_item_list.eq(_i);
-	            var new_item_id = _this5.getProductIdFromDom(new_item);
-	            if (!_this5.checkProduct(new_item_id)) {
-	              continue;
-	            }
-
-	            var last_item = _this5.getLastProduct(page_style);
-
-	            if (last_item.length == 0) {
-	              $('div.grid.g-clearfix').children().eq(0).append(new_item);
-	            } else {
-	              last_item.after(new_item);
-	            }
-	          }
-	        } else {
-	          new_item_list = iframe_window.find("div.items.g-clearfix").children();
-
-	          var _prev_item_list = $('div.item.g-clearfix');
-	          for (var _i2 = 0; _i2 < _prev_item_list.length; _i2++) {
-	            var _item = _prev_item_list.eq(_i2);
-	            // 跳过白名单商品
-	            if (!_item.hasClass("white")) {
-	              _item.remove();
-	            }
-	          }
-
-	          for (var _i3 = 0; _i3 < new_item_list.length; _i3++) {
-	            var _new_item = new_item_list.eq(_i3);
-	            var _new_item_id = _this5.getProductIdFromDom(_new_item);
-	            if (!_this5.checkProduct(_new_item_id)) {
-	              continue;
-	            }
-
-	            var _last_item = _this5.getLastProduct(page_style);
-
-	            if (_last_item.length == 0) {
-	              $('div.items.g-clearfix').append(_new_item);
-	            } else {
-	              _last_item.after(_new_item);
-	            }
-	          }
-	        }
-	      });
 	    }
 
 	    /*
@@ -4866,16 +4864,25 @@ webpackJsonp([0],[
 	        var cur_id = this.getProductIdFromImg(cur_img);
 	        if (cur_id == "") continue;
 
-	        // 大叉，黑名单，直接删除商品，并填补造成的页面空缺
+	        // 大叉，黑名单，
+	        // 若是白名单商品，则从WHITE_LIST中去除，并将该商品移到现有白名单商品之后
+	        // 否则，删除商品，并填补造成的页面空缺
 	        if (cur_type == this.SIGN_BLACK) {
-	          this.updateItem(cur_item, cur_id);
+	          if ($.inArray(cur_id, this.WHITE_ID_LIST) != -1) {
+	            var first_gray_product = this.getFirstGrayProduct(page_style);
 
-	          if ($('#' + cur_id).length > 0) {
-	            $('#' + cur_id).remove();
-	            this.BLACK_LIST.push(cur_id);
+	            this.removeItemFromWhite(cur_item, cur_id);
+	            $('#' + cur_id).insertBefore(first_gray_product);
+	          } else {
+	            this.updateItem(cur_item, cur_id);
 
-	            if (this.next_page_dom_list != "") {
-	              this.fillInBlank(page_style);
+	            if ($('#' + cur_id).length > 0) {
+	              $('#' + cur_id).remove();
+	              this.BLACK_ID_LIST.push(cur_id);
+
+	              if (this.next_page_dom_list != "") {
+	                this.fillInBlank(page_style);
+	              }
 	            }
 	          }
 	        }
@@ -4888,13 +4895,52 @@ webpackJsonp([0],[
 
 	            if ($('#' + cur_id).length > 0) {
 	              $('#' + cur_id).insertBefore(first_product);
-	              this.WHITE_LIST.push(cur_id);
+	              this.WHITE_ID_LIST.push(cur_id);
+	              this.WHITE_DOM_LIST.push($('#' + cur_id));
 
 	              // 新开标签页，显示该商品的商品详情
 	              this.createTab(cur_img.parentNode.href);
 	            }
 	          }
 	      }
+	    }
+
+	    /*
+	     * 当页面URL变更（点击过滤条件或下一页）时刷新页面内容
+	     * 同时更新next_page_iframe
+	     */
+
+	  }, {
+	    key: "handleURLChange",
+	    value: function handleURLChange(new_url) {
+	      console.debug(new_url, this.WHITE_ID_LIST, this.BLACK_ID_LIST, this.WHITE_DOM_LIST);
+
+	      var page_style = this.getPageStyle();
+
+	      // 删除页面中已有的黑白名单商品
+	      var item_list = this.getPageItemList(page_style);
+	      for (var i = 0; i < item_list.length; i++) {
+	        var item = item_list.eq(i);
+	        var item_id = this.getProductIdFromDom(item);
+
+	        if ($.inArray(item_id, this.BLACK_ID_LIST) != -1 || $.inArray(item_id, this.WHITE_ID_LIST) != -1) {
+	          this.updateItem(item, item_id);
+
+	          if ($('#' + item_id).length > 0) {
+	            $('#' + item_id).remove();
+	          }
+	        }
+	      }
+
+	      // 添加白名单商品至最前
+	      var first_product = this.getFirstProduct(page_style);
+	      for (var _i = 0; _i < this.WHITE_DOM_LIST.length; _i++) {
+	        var _item = this.WHITE_DOM_LIST[_i];
+	        _item.insertBefore(first_product);
+	      }
+
+	      this.initPageData();
+	      this.getNextPage();
 	    }
 
 	    /*
@@ -4914,15 +4960,33 @@ webpackJsonp([0],[
 
 	    /*
 	     * 根据商品id更新该商品所在dom元素
-	       增加id属性；增加背景色样式
+	     * 增加id属性；增加背景色样式
 	     */
 
 	  }, {
 	    key: "updateItem",
 	    value: function updateItem(item, p_id) {
-	      item.id = p_id;
-	      item.style.backgroundColor = "#FFCCCC";
-	      item.className += " white";
+	      $(item).attr("id", p_id);
+	      $(item).css("background-color", "#FFCCCC");
+	      $(item).addClass("white");
+	    }
+
+	    /*
+	     * 从白名单列表中删除商品
+	     * 去除商品的背景色样式
+	     */
+
+	  }, {
+	    key: "removeItemFromWhite",
+	    value: function removeItemFromWhite(item, p_id) {
+	      var index = this.WHITE_ID_LIST.indexOf(p_id);
+	      if (index > -1) {
+	        this.WHITE_ID_LIST.splice(index, 1);
+	        this.WHITE_DOM_LIST.splice(index, 1);
+	      }
+
+	      $(item).css("background-color", "");
+	      $(item).removeClass("white");
 	    }
 
 	    /*
@@ -4946,15 +5010,15 @@ webpackJsonp([0],[
 	  }, {
 	    key: "getNewProduct",
 	    value: function getNewProduct(page_style) {
-	      var _this6 = this;
+	      var _this4 = this;
 
 	      while (true) {
 	        // 下一页商品用完，继续获取下下页商品
 	        if (this.item_index == this.next_page_dom_list.length) {
 	          this.getNextPage();
 	          setTimeout(function () {
-	            _this6.fillInBlank(page_style);
-	          }, 5000);
+	            _this4.fillInBlank(page_style);
+	          }, 6000);
 
 	          break;
 	        } else {
@@ -5004,7 +5068,7 @@ webpackJsonp([0],[
 	    key: "checkProduct",
 	    value: function checkProduct(numiid) {
 	      // 是否是黑白名单商品
-	      if ($.inArray(numiid, this.WHITE_LIST) != -1 || $.inArray(numiid, this.BLACK_LIST) != -1) {
+	      if ($.inArray(numiid, this.WHITE_ID_LIST) != -1 || $.inArray(numiid, this.BLACK_ID_LIST) != -1) {
 	        return false;
 	      }
 
@@ -5045,16 +5109,43 @@ webpackJsonp([0],[
 	    }
 
 	    /*
+	     * 获取当前页面的商品列表
+	     */
+
+	  }, {
+	    key: "getPageItemList",
+	    value: function getPageItemList(page_style) {
+	      if (page_style == this.GRID_STYLE) {
+	        return $('div.item.J_MouserOnverReq');
+	      } else {
+	        return $('div.item.g-clearfix');
+	      }
+	    }
+
+	    /*
 	     * 返回当前页面列表中第一个商品dom元素
 	     */
 
 	  }, {
 	    key: "getFirstProduct",
 	    value: function getFirstProduct(page_style) {
-	      if (page_style == this.GRID_STYLE) {
-	        return $('div.item.J_MouserOnverReq').eq(0);
-	      } else {
-	        return $('div.item.g-clearfix').eq(0);
+	      return this.getPageItemList(page_style).eq(0);
+	    }
+
+	    /*
+	     * 返回当前页面列表中第一个非白名单商品dom元素
+	     */
+
+	  }, {
+	    key: "getFirstGrayProduct",
+	    value: function getFirstGrayProduct(page_style) {
+	      var item_list = this.getPageItemList(page_style);
+
+	      for (var i = 0; i < item_list.length; i++) {
+	        var item = item_list.eq(i);
+	        if (!item.hasClass("white")) {
+	          return item;
+	        }
 	      }
 	    }
 
@@ -5065,13 +5156,7 @@ webpackJsonp([0],[
 	  }, {
 	    key: "getLastProduct",
 	    value: function getLastProduct(page_style) {
-	      var container = void 0;
-	      if (page_style == this.GRID_STYLE) {
-	        container = $('div.item.J_MouserOnverReq');
-	      } else {
-	        container = $('div.item.g-clearfix');
-	      }
-
+	      var container = this.getPageItemList(page_style);
 	      return container.eq(container.length - 1);
 	    }
 
@@ -5095,6 +5180,40 @@ webpackJsonp([0],[
 	    key: "nlp",
 	    value: function nlp(word) {
 	      chrome.runtime.sendMessage({ command: "nlp", word: word }, function (response) {});
+	    }
+
+	    //将URL中的UTF-8字符串转成中文字符串
+
+	  }, {
+	    key: "getCharFromUtf8",
+	    value: function getCharFromUtf8(str) {
+	      var cstr = "";
+	      var nOffset = 0;
+	      if (str == "") return "";
+	      str = str.toLowerCase();
+	      nOffset = str.indexOf("%e");
+	      if (nOffset == -1) return str;
+	      while (nOffset != -1) {
+	        cstr += str.substr(0, nOffset);
+	        str = str.substr(nOffset, str.length - nOffset);
+	        if (str == "" || str.length < 9) return cstr;
+	        cstr += this.utf8ToChar(str.substr(0, 9));
+	        str = str.substr(9, str.length - 9);
+	        nOffset = str.indexOf("%e");
+	      }
+	      return cstr + str;
+	    }
+
+	    //将编码转换成字符
+
+	  }, {
+	    key: "utf8ToChar",
+	    value: function utf8ToChar(str) {
+	      var iCode, iCode1, iCode2;
+	      iCode = parseInt("0x" + str.substr(1, 2));
+	      iCode1 = parseInt("0x" + str.substr(4, 2));
+	      iCode2 = parseInt("0x" + str.substr(7, 2));
+	      return String.fromCharCode((iCode & 0x0F) << 12 | (iCode1 & 0x3F) << 6 | iCode2 & 0x3F);
 	    }
 	  }]);
 	  return DomOperation;
