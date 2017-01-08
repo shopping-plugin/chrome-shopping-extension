@@ -1,3 +1,5 @@
+import cloudService from "./cloudService"
+
 export default class DomOperation {
     constructor()
     {
