@@ -139,7 +139,7 @@ var OPERATION_LOG_FILE = 'operation_log';
             affair.status.filters = [];//初始化筛选条件
             affair.status.keywords = data.keyword || [];//初始化关键词
             affair.status.whiteList = [];//初始化白名单
-            affair.status.blacklist = [];//初始化黑名单
+            affair.status.blackList = [];//初始化黑名单
             affair.log = [];//初始化日志列表
             return file;
         }, callback);
