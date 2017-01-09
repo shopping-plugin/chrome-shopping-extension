@@ -12,7 +12,19 @@
     // 监听page消息
     chrome.runtime.onMessage.addListener(function (msg, sender, sendResponse) {
         console.debug("收到指令" + msg.command);
-        //增加日志的请求
+
+        cloud[msg.command](msg.data, function (err, log) {
+            if (err) {
+                sendResponse(err);
+                console.log(err);
+            } else {
+                sendResponse(log);
+                console.debug(log);
+                console.debug(msg.command + "请求的响应已发送");
+            }
+        });
+
+/*        //增加日志的请求
         if (msg.command === 'addBlackListItem') {
 
             cloud.addBlackListItem(msg.data, function (err, log) {
@@ -171,7 +183,7 @@
             });
 
             return true;
-        }
+        }*/
     });
 
 
