@@ -18,12 +18,16 @@ var cloud = {
     'deleteKeyword': null
 };
 
+var isSynchronizing = false;//是否正在同步中
+var logTasks = [];//
+
+// 在google drive上存储的根目录名
+var ROOT = 'shopping_plugin_cloud';
+var OPERATION_LOG_FILE = 'operation_log';
+
 
 // 立即执行函数
 !function () {
-    // 在google drive上存储的根目录名
-    var ROOT = 'shopping_plugin_cloud';
-    var OPERATION_LOG_FILE = 'operation_log';
 
     // 内部存储的token值
     var token = '';
@@ -73,6 +77,18 @@ var cloud = {
      * @param callback
      */
     cloud.doBaseWork = function (context, prepare, callback) {
+        if(isSynchronizing == true){//如果上一次的数据更新活动还没有结束 就将任务添加到未完成队列中 然后直接返回
+            logTasks.push({
+                "context": context,
+                "prepare": prepare,
+                "callback": callback
+            });
+            return;
+        }
+
+        console.debug("正常执行任务");
+
+        isSynchronizing = true;//标记为正在同步中
         //TODO isLocal
         identify(function () {
             console.debug('准备根目录...');
@@ -90,12 +106,19 @@ var cloud = {
                     gdapi.update(token, {//更新文件信息
                         'fileId': fileId,
                         'data': file
-                    }, function (err, fileId) {
+                    }, function (err, fileId) {//如果更新文件结束
                         if (err) {
                             callback(err);
+                        }else {
+                            callback(null, file);
+                            isSynchronizing = false;//更新数据已结束
+                            if(logTasks.length != 0){//如果还有未完成的更新任务则执行
+                                var task = logTasks.pop();
+                                console.debug("准备执行logTasks中任务");
+                                cloud.doBaseWork(task.context, task.prepare, task.callback);
+                            }
                         }
                     });
-                    callback(null, file);
                 });
 
             });
@@ -299,7 +322,7 @@ var cloud = {
             affair.log.push({
                     "time": Date.now(),
                     "operation": "nextPage",
-                    "content": content
+                    "content": data.url
                 });
             return file;
         }, callback);
