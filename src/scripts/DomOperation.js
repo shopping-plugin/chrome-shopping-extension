@@ -106,7 +106,7 @@ export default class DomOperation {
         }
 
         if (isNewAffair) {
-          this.affairId = new Date();
+          this.affairId = Date.now();
           let q = $(document)[0].URL.match(/[&?]q=([^& ]*)/)[1];
           let q_array = this.getCharFromUtf8(q).split("+");
 

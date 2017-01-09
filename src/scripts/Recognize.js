@@ -340,12 +340,12 @@ export default class Recognize
     }
 
     sendServer(data) {
-        chrome.runtime.sendMessage({
-            "command": "appendLog",
-            "data": data
-        }, (res) => {
-            // console.log("server received the dom data", res);
-        });
+        // chrome.runtime.sendMessage({
+        //     "command": "appendLog",
+        //     "data": data
+        // }, (res) => {
+        //     // console.log("server received the dom data", res);
+        // });
     }
 
     drawConnectedPoint(from, to)

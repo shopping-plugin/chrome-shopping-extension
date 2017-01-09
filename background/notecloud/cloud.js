@@ -110,7 +110,7 @@ var cloud = {
     cloud.beginNewAffair = function (data, callback) {
         cloud.doBaseWork(data, function (data, file) {
             file[data.affairId] = {};
-            var affair = file.affairId;
+            var affair = file[data.affairId];
             affair.status = {};
             affair.status.url = data.url;//初始化url
             affair.status.filters = [];//初始化筛选条件
