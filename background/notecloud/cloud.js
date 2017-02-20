@@ -1,6 +1,26 @@
 /**
  * 云端存储服务模块
  */
+if (![].removeAt) {
+    Array.prototype.removeAt = function (index) {
+        if (index >= 0 && index < this.length) {
+            var item = this[index];
+            this.splice(index, 1);
+            return item;
+        } else {
+            return undefined;
+        }
+    };
+}
+if (![].remove) {
+    Array.prototype.remove = function (item) {
+        var index = this.indexOf(item);
+        if (index >= 0) {
+            this.removeAt(index);
+        }
+        return this;
+    };
+}
 
 // 全局cloud命名空间
 var cloud = {
