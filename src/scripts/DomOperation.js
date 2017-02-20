@@ -277,6 +277,9 @@ export default class DomOperation {
       let cur_url = $(document)[0].URL;
       let q_para = cur_url.match(/[&?]q=([^& ]*)/)[0];
 
+      let added = [];
+      let deleted = [];
+
       for (let i = 0; i < wordList.length; i++) {
         let keyword = "";
 
@@ -294,11 +297,11 @@ export default class DomOperation {
             if (typeList[i] == "-") {
               keyword += "-";
               this.KEYWORD_LIST.push("-" + nlp_word);
-              this.cloudService.deleteKeyword(this.affairId, nlp_word, cur_url);
+              deleted.push(nlp_word);
             }
             else {
               this.KEYWORD_LIST.push(nlp_word);
-              this.cloudService.addKeyword(this.affairId, nlp_word, cur_url);
+              added.push(nlp_word);
             }
 
             keyword += encodeURI(nlp_word);
@@ -318,11 +321,11 @@ export default class DomOperation {
           if (typeList[i] == "-") {
             keyword += "-";
             this.KEYWORD_LIST.push("-" + w);
-            this.cloudService.deleteKeyword(this.affairId, w, cur_url);
+            deleted.push(w);
           }
           else {
             this.KEYWORD_LIST.push(w);
-            this.cloudService.addKeyword(this.affairId, w, cur_url);
+            added.push(w);
           }
 
           keyword += encodeURI(w);
@@ -332,6 +335,9 @@ export default class DomOperation {
 
         q_para += keyword;
       }
+
+      this.cloudService.addKeyword(this.affairId, added, cur_url);
+      this.cloudService.deleteKeyword(this.affairId, deleted, cur_url);
 
       let new_url = cur_url.replace(/[&?]q=([^& ]*)/, q_para);
 
@@ -345,6 +351,9 @@ export default class DomOperation {
      */
     filterDom(containerDivList, imgDivList, typeList) {
     	let page_style = this.getPageStyle();
+      let addedWhite = [];
+      let deletedWhite = [];
+      let addedBlack = [];
 
     	for (let i = 0; i < containerDivList.length; i++) {
     		let cur_item = containerDivList[i];
@@ -365,7 +374,7 @@ export default class DomOperation {
             this.removeItemFromWhite(cur_item, cur_id);
             $('#' + cur_id).insertBefore(first_gray_product);
 
-            this.cloudService.deleteWhiteListItem(this.affairId, cur_id);
+            deletedWhite.push(cur_id);
           }
           else {
             this.updateItem(cur_item, cur_id);
@@ -373,7 +382,7 @@ export default class DomOperation {
       			if ($('#' + cur_id).length > 0) {
       				$('#' + cur_id).remove();
       				this.BLACK_ID_LIST.push(cur_id);
-              this.cloudService.addBlackListItem(this.affairId, cur_id);
+              addedBlack.push(cur_id);
 
       				if (this.next_page_dom_list != "") {
                 this.fillInBlank(page_style);
@@ -396,13 +405,17 @@ export default class DomOperation {
     				$('#' + cur_id).insertBefore(first_product);
     				this.WHITE_ID_LIST.push(cur_id);
             this.WHITE_DOM_LIST.push($('#' + cur_id));
-            this.cloudService.addWhiteListItem(this.affairId, cur_id);
+            addedWhite.push(cur_id);
 
     				// 新开标签页，显示该商品的商品详情
     				this.createTab(cur_img.parentNode.href, false, false);
     			}
     		}
     	}
+
+      this.cloudService.deleteWhiteListItem(this.affairId, deletedWhite);
+      this.cloudService.addBlackListItem(this.affairId, addedBlack);
+      this.cloudService.addWhiteListItem(this.affairId, addedWhite);
     }
 
     /*

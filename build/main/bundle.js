@@ -4955,6 +4955,9 @@ webpackJsonp([0],[
 	      var cur_url = $(document)[0].URL;
 	      var q_para = cur_url.match(/[&?]q=([^& ]*)/)[0];
 
+	      var added = [];
+	      var deleted = [];
+
 	      for (var i = 0; i < wordList.length; i++) {
 	        var keyword = "";
 
@@ -4972,10 +4975,10 @@ webpackJsonp([0],[
 	            if (typeList[i] == "-") {
 	              keyword += "-";
 	              this.KEYWORD_LIST.push("-" + nlp_word);
-	              this.cloudService.deleteKeyword(this.affairId, nlp_word, cur_url);
+	              deleted.push(nlp_word);
 	            } else {
 	              this.KEYWORD_LIST.push(nlp_word);
-	              this.cloudService.addKeyword(this.affairId, nlp_word, cur_url);
+	              added.push(nlp_word);
 	            }
 
 	            keyword += encodeURI(nlp_word);
@@ -4994,10 +4997,10 @@ webpackJsonp([0],[
 	          if (typeList[i] == "-") {
 	            keyword += "-";
 	            this.KEYWORD_LIST.push("-" + w);
-	            this.cloudService.deleteKeyword(this.affairId, w, cur_url);
+	            deleted.push(w);
 	          } else {
 	            this.KEYWORD_LIST.push(w);
-	            this.cloudService.addKeyword(this.affairId, w, cur_url);
+	            added.push(w);
 	          }
 
 	          keyword += encodeURI(w);
@@ -5007,6 +5010,9 @@ webpackJsonp([0],[
 
 	        q_para += keyword;
 	      }
+
+	      this.cloudService.addKeyword(this.affairId, added, cur_url);
+	      this.cloudService.deleteKeyword(this.affairId, deleted, cur_url);
 
 	      var new_url = cur_url.replace(/[&?]q=([^& ]*)/, q_para);
 
@@ -5023,6 +5029,9 @@ webpackJsonp([0],[
 	    key: "filterDom",
 	    value: function filterDom(containerDivList, imgDivList, typeList) {
 	      var page_style = this.getPageStyle();
+	      var addedWhite = [];
+	      var deletedWhite = [];
+	      var addedBlack = [];
 
 	      for (var i = 0; i < containerDivList.length; i++) {
 	        var cur_item = containerDivList[i];
@@ -5042,14 +5051,14 @@ webpackJsonp([0],[
 	            this.removeItemFromWhite(cur_item, cur_id);
 	            $('#' + cur_id).insertBefore(first_gray_product);
 
-	            this.cloudService.deleteWhiteListItem(this.affairId, cur_id);
+	            deletedWhite.push(cur_id);
 	          } else {
 	            this.updateItem(cur_item, cur_id);
 
 	            if ($('#' + cur_id).length > 0) {
 	              $('#' + cur_id).remove();
 	              this.BLACK_ID_LIST.push(cur_id);
-	              this.cloudService.addBlackListItem(this.affairId, cur_id);
+	              addedBlack.push(cur_id);
 
 	              if (this.next_page_dom_list != "") {
 	                this.fillInBlank(page_style);
@@ -5072,13 +5081,17 @@ webpackJsonp([0],[
 	              $('#' + cur_id).insertBefore(first_product);
 	              this.WHITE_ID_LIST.push(cur_id);
 	              this.WHITE_DOM_LIST.push($('#' + cur_id));
-	              this.cloudService.addWhiteListItem(this.affairId, cur_id);
+	              addedWhite.push(cur_id);
 
 	              // 新开标签页，显示该商品的商品详情
 	              this.createTab(cur_img.parentNode.href, false, false);
 	            }
 	          }
 	      }
+
+	      this.cloudService.deleteWhiteListItem(this.affairId, deletedWhite);
+	      this.cloudService.addBlackListItem(this.affairId, addedBlack);
+	      this.cloudService.addWhiteListItem(this.affairId, addedWhite);
 	    }
 
 	    /*
@@ -5930,13 +5943,12 @@ webpackJsonp([0],[
 					"spec": ">=1.0.10 <2.0.0",
 					"type": "range"
 				},
-				"/Users/xmc1993/Workspace/Nodejs/chrome-shopping-extension"
+				"/Users/yef/codes/chrome-plugin/chrome-shopping-extension"
 			]
 		],
 		"_from": "tesseract.js@>=1.0.10 <2.0.0",
 		"_id": "tesseract.js@1.0.10",
 		"_inCache": true,
-		"_installable": true,
 		"_location": "/tesseract.js",
 		"_nodeVersion": "6.7.0",
 		"_npmOperationalInternal": {
@@ -5965,7 +5977,7 @@ webpackJsonp([0],[
 		"_shasum": "e11a96ae76147939d9218f88e287fb69414b1e5d",
 		"_shrinkwrap": null,
 		"_spec": "tesseract.js@^1.0.10",
-		"_where": "/Users/xmc1993/Workspace/Nodejs/chrome-shopping-extension",
+		"_where": "/Users/yef/codes/chrome-plugin/chrome-shopping-extension",
 		"author": "",
 		"browser": {
 			"./src/node/index.js": "./src/browser/index.js"
