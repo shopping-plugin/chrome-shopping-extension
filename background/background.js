@@ -4,8 +4,17 @@ chrome.runtime.onInstalled.addListener(function() {
     chrome.declarativeContent.onPageChanged.addRules([
       {
         conditions: [
+          // 淘宝搜索页面
           new chrome.declarativeContent.PageStateMatcher({
             pageUrl: { urlContains: 's.taobao.com/search?' },
+          }),
+          // 淘宝详情页面
+          new chrome.declarativeContent.PageStateMatcher({
+            pageUrl: { urlContains: 'item.taobao.com/item.htm?' },
+          }),
+          // 天猫详情页面
+          new chrome.declarativeContent.PageStateMatcher({
+            pageUrl: { urlContains: 'detail.tmall.com/item.htm?' },
           })
         ],
         actions: [ new chrome.declarativeContent.ShowPageAction() ]

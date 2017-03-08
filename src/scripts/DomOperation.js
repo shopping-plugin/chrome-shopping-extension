@@ -20,6 +20,7 @@ export default class DomOperation {
 
         setTimeout(() => {
           this.initKeywordList();
+          // TODO 将当前URL传至后端，获取断点之前的黑白名单，若存在，也需对页面进行刷新
           this.retrieveBWList();
           this.initPageData();
           this.getNextPage();
@@ -655,7 +656,7 @@ export default class DomOperation {
     }
 
     /*
-     * 与background页面通信，调用淘宝API对圈中的关键字进行分词
+     * 与background页面通信，调用API对圈中的关键字进行分词
      */
     nlp(word) {
       chrome.runtime.sendMessage({command: "nlp", word: word}, (response) => {

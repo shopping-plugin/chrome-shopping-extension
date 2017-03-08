@@ -3,15 +3,15 @@ webpackJsonp([0],[
 /***/ function(module, exports, __webpack_require__) {
 
 	__webpack_require__(2);
-	__webpack_require__(138);
-	__webpack_require__(142);
+	__webpack_require__(139);
 	__webpack_require__(143);
 	__webpack_require__(144);
 	__webpack_require__(145);
 	__webpack_require__(146);
 	__webpack_require__(147);
 	__webpack_require__(148);
-	module.exports = __webpack_require__(149);
+	__webpack_require__(149);
+	module.exports = __webpack_require__(150);
 
 
 /***/ },
@@ -32,6 +32,10 @@ webpackJsonp([0],[
 	var _Capture = __webpack_require__(85);
 
 	var _Capture2 = _interopRequireDefault(_Capture);
+
+	var _BuyAction = __webpack_require__(138);
+
+	var _BuyAction2 = _interopRequireDefault(_BuyAction);
 
 	function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
@@ -94,6 +98,39 @@ webpackJsonp([0],[
 	            });
 	        }
 	    }, 300);
+
+	    /*
+	     * 添加对立即购买或加入购物车的点击事件
+	     */
+	    var url = $(document)[0].URL;
+	    var index = url.indexOf("item.htm?");
+	    // 商品详情页面
+	    if (index != -1) {
+	        (function () {
+	            var p_id = url.match(/[&?]id=([^& ]*)/)[1];
+	            var a_buy = void 0;
+	            var a_add = void 0;
+
+	            // 淘宝
+	            if (url.indexOf("item.taobao.com/item.htm?") != -1) {
+	                a_buy = $('a.J_LinkBuy');
+	                a_add = $('a.J_LinkAdd');
+	            }
+	            // 天猫
+	            else {
+	                    //a_buy = $('a#J_LinkBuy');
+	                    //a_add = $('a#J_LinkBasket');
+	                }
+
+	            var action = new _BuyAction2.default();
+	            a_buy.click(function () {
+	                action.handleBuyAction(p_id);
+	            });
+	            a_add.click(function () {
+	                action.handleBuyAction(p_id);
+	            });
+	        })();
+	    }
 	});
 
 	function getWebConfig() {
@@ -5373,7 +5410,7 @@ webpackJsonp([0],[
 	    }
 
 	    /*
-	     * 与background页面通信，调用淘宝API对圈中的关键字进行分词
+	     * 与background页面通信，调用API对圈中的关键字进行分词
 	     */
 
 	  }, {
@@ -8033,57 +8070,107 @@ webpackJsonp([0],[
 
 /***/ },
 /* 138 */
+/***/ function(module, exports, __webpack_require__) {
+
+	"use strict";
+
+	Object.defineProperty(exports, "__esModule", {
+	  value: true
+	});
+
+	var _classCallCheck2 = __webpack_require__(80);
+
+	var _classCallCheck3 = _interopRequireDefault(_classCallCheck2);
+
+	var _createClass2 = __webpack_require__(81);
+
+	var _createClass3 = _interopRequireDefault(_createClass2);
+
+	var _cloudService = __webpack_require__(120);
+
+	var _cloudService2 = _interopRequireDefault(_cloudService);
+
+	function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
+
+	var DomOperation = function () {
+	  function DomOperation() {
+	    (0, _classCallCheck3.default)(this, DomOperation);
+
+	    this.cloudService = new _cloudService2.default();
+	  }
+
+	  /*
+	   * 处理不同页面的结算事件，将商品ID列表传给server记录
+	   * TODO: 目前仅监测淘宝和天猫商品详情页面的‘立即购买’和‘加入购物车’点击事件
+	   */
+
+
+	  (0, _createClass3.default)(DomOperation, [{
+	    key: "handleBuyAction",
+	    value: function handleBuyAction(p_id) {
+	      var id_list = [];
+	      id_list.push(p_id);
+	      console.debug(id_list);
+	    }
+	  }]);
+	  return DomOperation;
+	}();
+
+	exports.default = DomOperation;
+
+/***/ },
+/* 139 */
 /***/ function(module, exports) {
 
 	// removed by extract-text-webpack-plugin
 
 /***/ },
-/* 139 */,
 /* 140 */,
 /* 141 */,
-/* 142 */
+/* 142 */,
+/* 143 */
 /***/ function(module, exports, __webpack_require__) {
 
 	module.exports = __webpack_require__.p + "background.html";
 
 /***/ },
-/* 143 */
+/* 144 */
 /***/ function(module, exports, __webpack_require__) {
 
 	module.exports = __webpack_require__.p + "index.html";
 
 /***/ },
-/* 144 */
+/* 145 */
 /***/ function(module, exports) {
 
 	module.exports = "data:image/png;base64,bW9kdWxlLmV4cG9ydHMgPSBfX3dlYnBhY2tfcHVibGljX3BhdGhfXyArICIvaWNvbnMvMTI4LnBuZyI7"
 
 /***/ },
-/* 145 */
+/* 146 */
 /***/ function(module, exports) {
 
 	module.exports = "data:image/png;base64,bW9kdWxlLmV4cG9ydHMgPSBfX3dlYnBhY2tfcHVibGljX3BhdGhfXyArICIvaWNvbnMvMTYucG5nIjs="
 
 /***/ },
-/* 146 */
+/* 147 */
 /***/ function(module, exports) {
 
 	module.exports = "data:image/png;base64,bW9kdWxlLmV4cG9ydHMgPSBfX3dlYnBhY2tfcHVibGljX3BhdGhfXyArICIvaWNvbnMvMzIucG5nIjs="
 
 /***/ },
-/* 147 */
+/* 148 */
 /***/ function(module, exports) {
 
 	module.exports = "data:image/png;base64,bW9kdWxlLmV4cG9ydHMgPSBfX3dlYnBhY2tfcHVibGljX3BhdGhfXyArICIvaWNvbnMvNjQucG5nIjs="
 
 /***/ },
-/* 148 */
+/* 149 */
 /***/ function(module, exports) {
 
 	module.exports = "data:image/jpeg;base64,bW9kdWxlLmV4cG9ydHMgPSBfX3dlYnBhY2tfcHVibGljX3BhdGhfXyArICIvaWNvbnMvYmFja2dyb3VuZC5qcGciOw=="
 
 /***/ },
-/* 149 */
+/* 150 */
 /***/ function(module, exports) {
 
 	module.exports = "data:image/png;base64,bW9kdWxlLmV4cG9ydHMgPSBfX3dlYnBhY2tfcHVibGljX3BhdGhfXyArICIvaWNvbnMvaXRlbS5wbmciOw=="
