@@ -385,7 +385,7 @@ var OPERATION_LOG_FILE = 'operation_log';
     cloud.getInfoByUrl = function (data, callback) {
         cloud.doBaseWork(data, function (data, file) {
             for (var key in file) {
-                if (file[key].url == data.url) {
+                if (file[key].status.url == data.url) {
                     callback(null, file[key]);
                     return null; //如果找到匹配的url那么直接返回
                 }
