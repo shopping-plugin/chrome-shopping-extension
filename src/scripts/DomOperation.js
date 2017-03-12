@@ -20,8 +20,8 @@ export default class DomOperation {
 
         setTimeout(() => {
           this.initKeywordList();
-          // TODO 将当前URL传至后端，获取断点之前的黑白名单，若存在，也需对页面进行刷新
           this.retrieveBWList();
+          this.handleBreakPoint();
           this.initPageData();
           this.getNextPage();
         }, 1000);
@@ -115,12 +115,40 @@ export default class DomOperation {
           console.debug("begin new affair");
         }
 
-        console.debug(this.WHITE_ID_LIST, this.WHITE_DOM_LIST, this.BLACK_ID_LIST);
-
         this.refreshPageByBWList();
+
+        console.debug(this.WHITE_ID_LIST, this.WHITE_DOM_LIST, this.BLACK_ID_LIST);
       });
 
       chrome.storage.local.remove(['WHITE_ID_LIST', 'WHITE_DOM_LIST', 'BLACK_ID_LIST']);
+    }
+
+    // 将当前URL传至后端，获取断点之前的黑白名单，若存在，也需对页面进行刷新
+    handleBreakPoint() {
+      this.cloudService.getInfoByUrl($(document)[0].URL, (data) => {
+        console.debug(data);
+        if (data != undefined) {
+          let white = data.status.whiteList;
+          let black = data.status.blackList;
+
+          let page_style = this.getPageStyle();
+          let item_list = this.getPageItemList(page_style);
+          for (let i = 0; i < item_list.length; i++) {
+            let item = item_list.eq(i);
+            let item_id = this.getProductIdFromDom(item);
+
+            if ($.inArray(item_id, black) != -1 && $.inArray(item_id, this.BLACK_ID_LIST) == -1) {
+              this.BLACK_ID_LIST.push(item_id);
+            }
+            if ($.inArray(item_id, white) != -1 && $.inArray(item_id, this.WHITE_ID_LIST) == -1) {
+              this.WHITE_ID_LIST.push(item_id);
+              this.WHITE_DOM_LIST.push(item);
+            }
+          }
+
+          this.refreshPageByBWList();
+        }
+      });
     }
 
     /*
