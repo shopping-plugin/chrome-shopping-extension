@@ -207,4 +207,36 @@ export default class CouldServce {
 
         });
     }
+
+    /**
+     * 根据url获得相应的事务信息
+     * @param url
+     * @param callback
+     */
+    getInfoByUrl(url, callback){
+        var data = {
+            "url": url
+        }
+        chrome.runtime.sendMessage({
+            "command": "getInfoByUrl",
+            "data": data
+        }, function (res) {
+            callback(res);//如果返回为{}说明没有相应的事务信息 如果返回的不是{}则可以获取其中的白名单和黑名单等信息
+        });
+    }
+
+    /**
+     * 用户提交低昂丹
+     * @param itemIds 购物车中的物品Id列表
+     */
+    commitOrder(itemIds){
+        var data = {
+            "itemIds" : itemIds
+        }
+        chrome.runtime.sendMessage({
+            "command": "commitOrder",
+            "data": data
+        }, function (res) {
+        });
+    }
 }

@@ -97,7 +97,7 @@ var OPERATION_LOG_FILE = 'operation_log';
      * @param callback
      */
     cloud.doBaseWork = function (context, prepare, callback) {
-        if(isSynchronizing == true){//如果上一次的数据更新活动还没有结束 就将任务添加到未完成队列中 然后直接返回
+        if (isSynchronizing == true) {//如果上一次的数据更新活动还没有结束 就将任务添加到未完成队列中 然后直接返回
             logTasks.push({
                 "context": context,
                 "prepare": prepare,
@@ -123,22 +123,33 @@ var OPERATION_LOG_FILE = 'operation_log';
 
                     file = prepare(context, file);//更新数据内容
 
-                    gdapi.update(token, {//更新文件信息
-                        'fileId': fileId,
-                        'data': file
-                    }, function (err, fileId) {//如果更新文件结束
-                        if (err) {
-                            callback(err);
-                        }else {
-                            callback(null, file);
-                            isSynchronizing = false;//更新数据已结束
-                            if(logTasks.length != 0){//如果还有未完成的更新任务则执行
-                                var task = logTasks.pop();
-                                console.debug("准备执行logTasks中任务");
-                                cloud.doBaseWork(task.context, task.prepare, task.callback);
+                    if (file != null) {
+                        gdapi.update(token, {//更新文件信息
+                            'fileId': fileId,
+                            'data': file
+                        }, function (err, fileId) {//如果更新文件结束
+                            if (err) {
+                                callback(err);
+                            } else {
+                                callback(null, file);
+                                isSynchronizing = false;//更新数据已结束
+                                if (logTasks.length != 0) {//如果还有未完成的更新任务则执行
+                                    var task = logTasks.pop();
+                                    console.debug("准备执行logTasks中任务");
+                                    cloud.doBaseWork(task.context, task.prepare, task.callback);
+                                }
                             }
+                        });
+                    } else {
+                        isSynchronizing = false;//不需要更新数据 结束同步
+                        if (logTasks.length != 0) {//如果还有未完成的更新任务则执行
+                            var task = logTasks.pop();
+                            console.debug("准备执行logTasks中任务");
+                            cloud.doBaseWork(task.context, task.prepare, task.callback);
                         }
-                    });
+                    }
+
+
                 });
 
             });
@@ -340,10 +351,10 @@ var OPERATION_LOG_FILE = 'operation_log';
             var affair = file[data.affairId];
             affair.status.url = data.url;
             affair.log.push({
-                    "time": Date.now(),
-                    "operation": "nextPage",
-                    "content": data.url
-                });
+                "time": Date.now(),
+                "operation": "nextPage",
+                "content": data.url
+            });
             return file;
         }, callback);
     }
@@ -364,6 +375,41 @@ var OPERATION_LOG_FILE = 'operation_log';
             });
             return file;
         }, callback);
+    }
+
+    /**
+     * 查找有没有匹配的url
+     * @param data
+     * @param callback
+     */
+    cloud.getInfoByUrl = function (data, callback) {
+        cloud.doBaseWork(data, function (data, file) {
+            for (var key in file) {
+                if (file[key].url == data.url) {
+                    callback(file[key]);
+                    return null; //如果找到匹配的url那么直接返回
+                }
+            }
+            callback({});
+            return null; //no need update
+        }, function () {
+            //do nothing
+        });
+    }
+
+
+    /**
+     * 查找有没有匹配的url
+     * @param data
+     * @param callback
+     */
+    cloud.commitOrder = function (data, callback) {
+        //TODO filter
+        // cloud.doBaseWork(data, function (data, file) {
+        //    
+        // }, function () {
+        //     //do nothing
+        // });
     }
 
     /**
