@@ -386,11 +386,11 @@ var OPERATION_LOG_FILE = 'operation_log';
         cloud.doBaseWork(data, function (data, file) {
             for (var key in file) {
                 if (file[key].url == data.url) {
-                    callback(file[key]);
+                    callback(null, file[key]);
                     return null; //如果找到匹配的url那么直接返回
                 }
             }
-            callback({});
+            callback(null, {});
             return null; //no need update
         }, function () {
             //do nothing
