@@ -4710,6 +4710,7 @@ webpackJsonp([0],[
 	    setTimeout(function () {
 	      _this.initKeywordList();
 	      _this.retrieveBWList();
+	      _this.handleBreakPoint();
 	      _this.initPageData();
 	      _this.getNextPage();
 	    }, 1000);
@@ -4804,12 +4805,45 @@ webpackJsonp([0],[
 	          console.debug("begin new affair");
 	        }
 
-	        console.debug(_this2.WHITE_ID_LIST, _this2.WHITE_DOM_LIST, _this2.BLACK_ID_LIST);
-
 	        _this2.refreshPageByBWList();
+
+	        console.debug(_this2.WHITE_ID_LIST, _this2.WHITE_DOM_LIST, _this2.BLACK_ID_LIST);
 	      });
 
 	      chrome.storage.local.remove(['WHITE_ID_LIST', 'WHITE_DOM_LIST', 'BLACK_ID_LIST']);
+	    }
+
+	    // 将当前URL传至后端，获取断点之前的黑白名单，若存在，也需对页面进行刷新
+
+	  }, {
+	    key: "handleBreakPoint",
+	    value: function handleBreakPoint() {
+	      var _this3 = this;
+
+	      this.cloudService.getInfoByUrl($(document)[0].URL, function (data) {
+	        console.debug(data);
+	        if (data != undefined) {
+	          var white = data.status.whiteList;
+	          var black = data.status.blackList;
+
+	          var page_style = _this3.getPageStyle();
+	          var item_list = _this3.getPageItemList(page_style);
+	          for (var i = 0; i < item_list.length; i++) {
+	            var item = item_list.eq(i);
+	            var item_id = _this3.getProductIdFromDom(item);
+
+	            if ($.inArray(item_id, black) != -1 && $.inArray(item_id, _this3.BLACK_ID_LIST) == -1) {
+	              _this3.BLACK_ID_LIST.push(item_id);
+	            }
+	            if ($.inArray(item_id, white) != -1 && $.inArray(item_id, _this3.WHITE_ID_LIST) == -1) {
+	              _this3.WHITE_ID_LIST.push(item_id);
+	              _this3.WHITE_DOM_LIST.push(item);
+	            }
+	          }
+
+	          _this3.refreshPageByBWList();
+	        }
+	      });
 	    }
 
 	    /*
@@ -4861,7 +4895,7 @@ webpackJsonp([0],[
 	  }, {
 	    key: "getNextPage",
 	    value: function getNextPage() {
-	      var _this3 = this;
+	      var _this4 = this;
 
 	      if ($('#next_page_iframe').length != 0) {
 	        $('#next_page_iframe').remove();
@@ -4882,16 +4916,16 @@ webpackJsonp([0],[
 	        }, 3000, function () {
 	          // Animation complete
 	          var item_list = void 0;
-	          if (_this3.getPageStyle() == _this3.GRID_STYLE) {
+	          if (_this4.getPageStyle() == _this4.GRID_STYLE) {
 	            item_list = iframe_window.find("div.grid.g-clearfix").children().eq(0);
 	          } else {
 	            item_list = iframe_window.find("div.items.g-clearfix");
 	          }
 
-	          _this3.next_page_dom_list = item_list.children();
-	          _this3.item_index = 0;
-	          _this3.next_page_count++;
-	          _this3.next_page_url = _this3.getNextPageURL();
+	          _this4.next_page_dom_list = item_list.children();
+	          _this4.item_index = 0;
+	          _this4.next_page_count++;
+	          _this4.next_page_url = _this4.getNextPageURL();
 	        });
 	      }, 3000);
 	    }
@@ -4929,7 +4963,7 @@ webpackJsonp([0],[
 	  }, {
 	    key: "filterText",
 	    value: function filterText(wordList, typeList) {
-	      var _this4 = this;
+	      var _this5 = this;
 
 	      this.nlp_result = "";
 
@@ -4939,12 +4973,12 @@ webpackJsonp([0],[
 
 	      setTimeout(function () {
 	        // 未获取到分词结果或分词失败，则使用未分词的word进行过滤
-	        if (_this4.nlp_result == "") {
-	          _this4.filterKeyword(wordList, typeList, false);
+	        if (_this5.nlp_result == "") {
+	          _this5.filterKeyword(wordList, typeList, false);
 	        }
 	        // 使用分词结果过滤
 	        else {
-	            _this4.filterKeyword(_this4.nlp_result, typeList, true);
+	            _this5.filterKeyword(_this5.nlp_result, typeList, true);
 	          }
 	      }, 2000);
 	    }
@@ -5247,14 +5281,14 @@ webpackJsonp([0],[
 	  }, {
 	    key: "getNewProduct",
 	    value: function getNewProduct(page_style) {
-	      var _this5 = this;
+	      var _this6 = this;
 
 	      while (true) {
 	        // 下一页商品用完，继续获取下下页商品
 	        if (this.item_index == this.next_page_dom_list.length) {
 	          this.getNextPage();
 	          setTimeout(function () {
-	            _this5.fillInBlank(page_style);
+	            _this6.fillInBlank(page_style);
 	          }, 6000);
 
 	          break;
@@ -5696,6 +5730,43 @@ webpackJsonp([0],[
 	            };
 	            chrome.runtime.sendMessage({
 	                "command": "previousPage",
+	                "data": data
+	            }, function (res) {});
+	        }
+
+	        /**
+	         * 根据url获得相应的事务信息
+	         * @param url
+	         * @param callback
+	         */
+
+	    }, {
+	        key: "getInfoByUrl",
+	        value: function getInfoByUrl(url, callback) {
+	            var data = {
+	                "url": url
+	            };
+	            chrome.runtime.sendMessage({
+	                "command": "getInfoByUrl",
+	                "data": data
+	            }, function (res) {
+	                callback(res); //如果返回为{}说明没有相应的事务信息 如果返回的不是{}则可以获取其中的白名单和黑名单等信息
+	            });
+	        }
+
+	        /**
+	         * 用户提交低昂丹
+	         * @param itemIds 购物车中的物品Id列表
+	         */
+
+	    }, {
+	        key: "commitOrder",
+	        value: function commitOrder(itemIds) {
+	            var data = {
+	                "itemIds": itemIds
+	            };
+	            chrome.runtime.sendMessage({
+	                "command": "commitOrder",
 	                "data": data
 	            }, function (res) {});
 	        }
@@ -8101,7 +8172,7 @@ webpackJsonp([0],[
 
 	  /*
 	   * 处理不同页面的结算事件，将商品ID列表传给server记录
-	   * TODO: 目前仅监测淘宝和天猫商品详情页面的‘立即购买’和‘加入购物车’点击事件
+	   * TODO: 目前仅监测淘宝商品详情页面的‘立即购买’和‘加入购物车’点击事件
 	   */
 
 
@@ -8111,6 +8182,7 @@ webpackJsonp([0],[
 	      var id_list = [];
 	      id_list.push(p_id);
 	      console.debug(id_list);
+	      this.cloudService.commitOrder(id_list);
 	    }
 	  }]);
 	  return DomOperation;
