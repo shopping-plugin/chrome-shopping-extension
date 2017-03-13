@@ -387,7 +387,12 @@ var OPERATION_LOG_FILE = 'operation_log';
             for (var key in file) {
                 if (file[key].status.url == data.url) {
                     callback(null, file[key]);
-                    return null; //如果找到匹配的url那么直接返回
+                    file[key].log.push({
+                        "time": Date.now(),
+                        "operation": "repeatUrl",
+                        "content": ""
+                    });
+                    return file; //如果找到匹配的url 结束循环 打入重用日志
                 }
             }
             callback(null, {});
