@@ -411,7 +411,10 @@ var OPERATION_LOG_FILE = 'operation_log';
     cloud.commitOrder = function (data, callback) {
         //TODO filter
         // cloud.doBaseWork(data, function (data, file) {
-        //    
+        //     for (var key in file) {
+        //     }
+        //     callback(null, {});
+        //     return null; //no need update
         // }, function () {
         //     //do nothing
         // });
