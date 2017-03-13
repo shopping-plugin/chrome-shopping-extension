@@ -35,7 +35,9 @@ var cloud = {
     'addWhiteListItem': null,
     'deleteWhiteListItem': null,
     'addKeyword': null,
-    'deleteKeyword': null
+    'deleteKeyword': null,
+    'commitOrder': null,
+    'getInfoByUrl': null
 };
 
 var isSynchronizing = false;//是否正在同步中
@@ -171,6 +173,8 @@ var OPERATION_LOG_FILE = 'operation_log';
             affair.status.keywords = data.keyword || [];//初始化关键词
             affair.status.whiteList = [];//初始化白名单
             affair.status.blackList = [];//初始化黑名单
+            affair.status.hitWhiteList = [];//命中白名单
+            affair.status.hitBlackList = [];//命中黑名单
             affair.log = [];//初始化日志列表
             return file;
         }, callback);
@@ -412,12 +416,10 @@ var OPERATION_LOG_FILE = 'operation_log';
         //TODO filter
         // cloud.doBaseWork(data, function (data, file) {
         //     for (var key in file) {
+        //         if(file[key].status.whiteList)
         //     }
-        //     callback(null, {});
-        //     return null; //no need update
-        // }, function () {
-        //     //do nothing
-        // });
+        //     return file;
+        // }, callback);
     }
 
     /**
